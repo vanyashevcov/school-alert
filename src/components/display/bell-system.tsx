@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 import { useInterval } from '@/hooks/use-interval';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
@@ -11,30 +11,35 @@ import { format, getDay } from 'date-fns';
 
 const dayMapping: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
-function playSchoolBell() {
-    if (Tone.context.state !== 'running') return;
-
-    // Create a more realistic, longer bell sound
-    const bell = new Tone.MetalSynth({
-        frequency: 250,
-        envelope: {
-            attack: 0.001,
-            decay: 1.4,
-            release: 0.2,
-        },
-        harmonicity: 5.1,
-        modulationIndex: 32,
-        resonance: 4000,
-        octaves: 1.5,
-    }).toDestination();
-
-    // Play for 4 seconds
-    bell.triggerAttackRelease("C4", "4s");
+function playSchoolBell(player: Tone.Player | null) {
+    if (Tone.context.state !== 'running' || !player) return;
+    
+    if (player.loaded) {
+        player.start();
+    } else {
+        console.log("Bell sound is not loaded yet.");
+        // Optional: play a fallback sound if the player is not ready
+        const synth = new Tone.Synth().toDestination();
+        synth.triggerAttackRelease("C5", "1s");
+    }
 }
 
 export default function BellSystem() {
   const [schedule, setSchedule] = useState<LessonTime[]>([]);
   const [lastPlayed, setLastPlayed] = useState<string | null>(null);
+  const bellPlayer = useRef<Tone.Player | null>(null);
+
+  useEffect(() => {
+    // Initialize the player only on the client side
+    bellPlayer.current = new Tone.Player({
+        url: "https://zvukitop.com/wp-content/uploads/2021/03/zvuk-shkolnogo-zvonka-ygbb.mp3?_=7",
+        autostart: false,
+    }).toDestination();
+    
+    return () => {
+        bellPlayer.current?.dispose();
+    }
+  }, []);
 
   useEffect(() => {
     const today = dayMapping[getDay(new Date())];
@@ -74,7 +79,7 @@ export default function BellSystem() {
       const label = isStart ? `Початок уроку ${shouldPlay.lessonNumber}` : `Кінець уроку ${shouldPlay.lessonNumber}`;
       console.log(`Playing bell for ${label} at ${currentTime}`);
       
-      playSchoolBell();
+      playSchoolBell(bellPlayer.current);
 
       setLastPlayed(currentTime);
     }
