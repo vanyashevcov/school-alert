@@ -35,7 +35,7 @@ export default function NewsTicker() {
         <p 
           className="text-2xl font-semibold absolute whitespace-nowrap animate-marquee"
           style={{
-            animationDuration: `${news.length * 15}s`
+            animationDuration: `${news.length * 25}s`
           }}
         >
           {allNewsText}
