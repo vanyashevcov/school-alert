@@ -18,15 +18,19 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
           src={slide.content}
           alt={slide.title || 'Зображення для слайду'}
           fill
-          className="object-cover h-full"
+          className="object-contain h-full"
           data-ai-hint="school life"
         />
       );
     case 'video':
+      // Key change here to re-mount the iframe when the slide becomes active, helping with autoplay policies.
+      // Added allowfullscreen and other recommended attributes.
       return (
         <iframe
-          src={`https://www.youtube.com/embed/${slide.content}?autoplay=${isActive ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${slide.content}&enablejsapi=1`}
+          key={isActive ? slide.id : undefined}
+          src={`https://www.youtube.com/embed/${slide.content}?autoplay=1&mute=1&controls=0&loop=1&playlist=${slide.content}&enablejsapi=1`}
           title={slide.title || 'YouTube video player'}
+          frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
           className="w-full h-full border-0"
@@ -86,7 +90,9 @@ export default function Slideshow() {
 
     const currentSlideData = slides[currentSlide];
     if (!currentSlideData) return;
-
+    
+    // For videos, the autoplay is handled by the iframe itself. We just need to go to the next slide after the duration.
+    // For other types, we also move to the next slide.
     timeoutRef.current = setTimeout(() => {
         api.scrollNext();
     }, currentSlideData.duration * 1000);
