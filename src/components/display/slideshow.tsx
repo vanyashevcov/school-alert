@@ -6,11 +6,84 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { type SlideContent } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import Script from 'next/script';
 
-function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) {
+// Augment the window object
+declare global {
+    interface Window {
+        onYouTubeIframeAPIReady: () => void;
+        YT: any;
+    }
+}
+
+function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string, onEnd: () => void, onReady: () => void, isActive: boolean }) {
+    const playerRef = useRef<any>(null);
+    const playerContainerId = `youtube-player-${videoId}-${Math.random()}`;
+
+    useEffect(() => {
+        if (!isActive) {
+            if (playerRef.current) {
+                playerRef.current.destroy();
+                playerRef.current = null;
+            }
+            return;
+        }
+
+        const createPlayer = () => {
+            if (playerRef.current) {
+                 playerRef.current.destroy();
+            }
+            playerRef.current = new window.YT.Player(playerContainerId, {
+                videoId: videoId,
+                playerVars: {
+                    autoplay: 1,
+                    controls: 0,
+                    loop: 0, 
+                    modestbranding: 1,
+                    rel: 0
+                },
+                events: {
+                    'onReady': () => {
+                        onReady();
+                        playerRef.current?.playVideo();
+                    },
+                    'onStateChange': (event: any) => {
+                        if (event.data === window.YT.PlayerState.ENDED) {
+                            onEnd();
+                        }
+                    }
+                }
+            });
+        }
+
+        if (!window.YT) {
+            // If YT API is not ready, wait for it
+            const interval = setInterval(() => {
+                if (window.YT && window.YT.Player) {
+                    clearInterval(interval);
+                    createPlayer();
+                }
+            }, 100);
+        } else {
+             createPlayer();
+        }
+
+        return () => {
+             if (playerRef.current) {
+                playerRef.current.destroy();
+                playerRef.current = null;
+            }
+        };
+
+    }, [isActive, videoId, onEnd, onReady, playerContainerId]);
+
+    return <div id={playerContainerId} className="w-full h-full"></div>;
+}
+
+
+function Slide({ slide, isActive, onVideoEnd, onVideoReady }: { slide: SlideContent; isActive: boolean; onVideoEnd: () => void; onVideoReady: () => void; }) {
   switch (slide.type) {
     case 'image':
       return (
@@ -23,19 +96,13 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
         />
       );
     case 'video':
-      // Only render the iframe when the slide is active to prevent background audio playback.
-      if (!isActive) {
-        return null;
-      }
       return (
-        <iframe
-          src={`https://www.youtube.com/embed/${slide.content}?autoplay=1&controls=0&loop=1&playlist=${slide.content}&enablejsapi=1`}
-          title={slide.title || 'YouTube video player'}
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          className="w-full h-full border-0"
-        ></iframe>
+         <YouTubePlayer 
+            videoId={slide.content}
+            onEnd={onVideoEnd}
+            onReady={onVideoReady}
+            isActive={isActive}
+        />
       );
     case 'text':
       return (
@@ -59,7 +126,15 @@ export default function Slideshow() {
   const [api, setApi] = useState<CarouselApi>();
   const [slides, setSlides] = useState<SlideContent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isApiReady, setIsApiReady] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    window.onYouTubeIframeAPIReady = () => {
+      setIsApiReady(true);
+    };
+  }, []);
+
 
   useEffect(() => {
     const q = query(collection(db, 'slides'), orderBy('createdAt', 'asc'));
@@ -70,6 +145,20 @@ export default function Slideshow() {
     return () => unsubscribe();
   }, []);
 
+  const handleNext = () => {
+    api?.scrollNext();
+  };
+  
+  const setupTimeout = () => {
+    if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+    }
+    const currentSlideData = slides[currentSlide];
+    if (!currentSlideData || currentSlideData.type === 'video') return;
+
+    timeoutRef.current = setTimeout(handleNext, currentSlideData.duration * 1000);
+  }
+
   useEffect(() => {
     if (!api) return;
 
@@ -78,48 +167,42 @@ export default function Slideshow() {
     };
 
     api.on('select', onSelect);
+    setupTimeout();
+    
     return () => {
       api.off('select', onSelect);
-    };
-  }, [api]);
-  
-  useEffect(() => {
-    if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-    }
-    if (!api || slides.length === 0) return;
-
-    const currentSlideData = slides[currentSlide];
-    if (!currentSlideData) return;
-    
-    // For videos, the autoplay is handled by the iframe itself. We just need to go to the next slide after the duration.
-    // For other types, we also move to the next slide.
-    timeoutRef.current = setTimeout(() => {
-        api.scrollNext();
-    }, currentSlideData.duration * 1000);
-
-    return () => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
+      if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+      }
     };
   }, [api, currentSlide, slides]);
+  
 
   if (slides.length === 0) {
     return <div className="flex items-center justify-center h-full">Завантаження слайдів...</div>
   }
 
   return (
+    <>
+    <Script src="https://www.youtube.com/iframe_api" strategy="lazyOnload" />
     <Carousel setApi={setApi} className="w-full h-full" opts={{ loop: true }}>
       <CarouselContent className="h-full">
         {slides.map((slide, index) => (
           <CarouselItem key={slide.id}>
             <div className="relative w-full h-full bg-black">
-                <Slide slide={slide} isActive={index === currentSlide} />
+                <Slide 
+                    slide={slide} 
+                    isActive={index === currentSlide} 
+                    onVideoEnd={handleNext}
+                    onVideoReady={() => {
+                        if(timeoutRef.current) clearTimeout(timeoutRef.current)
+                    }}
+                />
             </div>
           </CarouselItem>
         ))}
       </CarouselContent>
     </Carousel>
+    </>
   );
 }

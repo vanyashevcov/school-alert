@@ -93,17 +93,19 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
                 </FormItem>
             )}
             />
-             <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Тривалість (сек)</FormLabel>
-                    <FormControl><Input type="number" {...field} /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
+            { watchType !== 'video' && (
+                <FormField
+                    control={form.control}
+                    name="duration"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Тривалість (сек)</FormLabel>
+                        <FormControl><Input type="number" {...field} /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
         </div>
         
         <FormField

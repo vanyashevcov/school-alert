@@ -120,7 +120,9 @@ export default function ContentManager() {
                         <div className="font-bold">{slide.title || 'Без назви'}</div>
                         <div className="text-sm text-muted-foreground truncate max-w-xs">{slide.content}</div>
                     </TableCell>
-                    <TableCell className="text-right">{slide.duration} с.</TableCell>
+                    <TableCell className="text-right">
+                        {slide.type === 'video' ? 'Авто' : `${slide.duration} с.`}
+                    </TableCell>
                     <TableCell className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(slide)}>Редагувати</Button>
                         <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(slide.id)}>Видалити</Button>
