@@ -19,3 +19,9 @@ export type LessonTime = {
   endTime: string; // "HH:mm"
   day: DayOfWeek;
 };
+
+export type NewsItem = {
+    id: string;
+    text: string;
+    createdAt: Timestamp;
+};

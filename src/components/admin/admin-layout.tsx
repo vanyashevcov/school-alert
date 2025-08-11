@@ -1,7 +1,7 @@
 
 'use client';
 
-import { FileVideo, BellRing, School, LogOut } from 'lucide-react';
+import { FileVideo, BellRing, School, LogOut, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -69,6 +69,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <SidebarMenuButton tooltip="Розклад дзвінків" href="/admin/dashboard?tab=schedule">
                             <BellRing />
                             <span className="truncate">Дзвінки</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton tooltip="Рядок новин" href="/admin/dashboard?tab=news">
+                            <Newspaper />
+                            <span className="truncate">Новини</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>

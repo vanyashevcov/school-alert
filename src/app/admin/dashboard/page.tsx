@@ -3,6 +3,7 @@
 
 import BellScheduleManager from "@/components/admin/bell-schedule-manager";
 import ContentManager from "@/components/admin/content-manager";
+import NewsTickerManager from "@/components/admin/news-ticker-manager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function DashboardPage() {
@@ -15,6 +16,7 @@ export default function DashboardPage() {
                 <TabsList className="mx-4 md:mx-8">
                     <TabsTrigger value="content">Керування контентом</TabsTrigger>
                     <TabsTrigger value="schedule">Розклад дзвінків</TabsTrigger>
+                    <TabsTrigger value="news">Рядок новин</TabsTrigger>
                 </TabsList>
                 <TabsContent value="content" className="space-y-4 m-0">
                     <div className="p-4 md:p-8 pt-0">
@@ -23,6 +25,11 @@ export default function DashboardPage() {
                 </TabsContent>
                 <TabsContent value="schedule" className="space-y-4 m-0">
                     <BellScheduleManager />
+                </TabsContent>
+                <TabsContent value="news" className="space-y-4 m-0">
+                    <div className="p-4 md:p-8 pt-0">
+                        <NewsTickerManager />
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>
