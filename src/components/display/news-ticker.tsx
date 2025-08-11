@@ -31,7 +31,7 @@ export default function NewsTicker() {
         <Newspaper />
         <span className="font-bold">НОВИНИ:</span>
       </div>
-      <div className="flex-1 relative h-full">
+      <div className="flex-1 relative h-full flex items-center">
         <p 
           className="text-2xl font-semibold absolute whitespace-nowrap animate-marquee"
           style={{
@@ -48,3 +48,4 @@ export default function NewsTicker() {
 // Add animation to tailwind.config.ts if it's not there
 // Or add a style tag here. Let's add it to globals.css
 // The animation will be in tailwind config.
+
