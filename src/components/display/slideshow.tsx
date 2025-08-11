@@ -86,10 +86,10 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
 const textSlideConfig: Record<TextSlideType, { icon: React.FC<any>, cardClass: string, titleClass: string, iconClass: string, backgroundClass: string }> = {
     normal: {
         icon: Info,
-        cardClass: 'bg-background/80 border-accent',
+        cardClass: 'bg-background/80 border-accent text-foreground',
         titleClass: 'text-primary',
         iconClass: 'text-primary',
-        backgroundClass: 'bg-slate-50',
+        backgroundClass: 'from-slate-50 to-slate-200 dark:from-slate-800 dark:to-slate-900',
     },
     announcement: {
         icon: Megaphone,
@@ -144,12 +144,12 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
             <Card className={cn("max-w-5xl w-full text-center border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass)}>
               <CardHeader>
                  <div className="flex flex-col justify-center items-center gap-4">
-                    <Icon className={cn("h-24 w-24", config.iconClass)} />
-                    {slide.title && <CardTitle className={cn("text-6xl font-bold", config.titleClass)}>{slide.title}</CardTitle>}
+                    <Icon className={cn("h-24 w-24 drop-shadow-lg", config.iconClass)} />
+                    {slide.title && <CardTitle className={cn("text-6xl font-bold drop-shadow-sm", config.titleClass)}>{slide.title}</CardTitle>}
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-5xl font-medium">{slide.content}</p>
+                <p className="text-5xl font-medium leading-tight text-balance">{slide.content}</p>
               </CardContent>
             </Card>
         </div>

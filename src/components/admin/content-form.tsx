@@ -61,11 +61,16 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
 
   const handleGenerateContent = async () => {
       const prompt = form.getValues('title') || "цікавий факт про навчання";
+      if (!prompt.trim()) {
+          toast({ variant: 'destructive', title: 'Помилка', description: 'Будь ласка, введіть заголовок для генерації контенту.' });
+          return;
+      }
       setIsGenerating(true);
       try {
           const result = await generateSchoolContent({ prompt });
           if (result.content) {
             form.setValue('content', result.content, { shouldValidate: true });
+            toast({ title: 'Контент згенеровано!', description: 'Перегляньте та відредагуйте результат.' });
           } else {
              toast({ variant: 'destructive', title: 'Помилка генерації', description: 'Не вдалося згенерувати контент.' });
           }
@@ -148,8 +153,8 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
             name="title"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Заголовок (необов'язково)</FormLabel>
-                <FormControl><Input placeholder="Наприклад, 'Важливе оголошення'" {...field} /></FormControl>
+                <FormLabel>Заголовок (використовується як промпт для AI)</FormLabel>
+                <FormControl><Input placeholder="Наприклад, 'Цікаві факти про космос'" {...field} /></FormControl>
                 <FormMessage />
                 </FormItem>
             )}
@@ -167,19 +172,7 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
               </FormLabel>
               <FormControl>
                 {watchType === 'text' ? (
-                  <div className="relative">
-                    <Textarea placeholder="Введіть текст..." {...field} />
-                    <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm" 
-                        className="absolute bottom-2 right-2"
-                        onClick={handleGenerateContent}
-                        disabled={isGenerating}>
-                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                        Згенерувати
-                    </Button>
-                  </div>
+                  <Textarea placeholder="Введіть або згенеруйте текст..." {...field} rows={6} />
                 ) : (
                   <Input placeholder={
                     watchType === 'image' ? 'https://...' : 'dQw4w9WgXcQ'
@@ -190,6 +183,20 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
             </FormItem>
           )}
         />
+
+        {watchType === 'text' && (
+            <div className="flex justify-start">
+                 <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleGenerateContent}
+                    disabled={isGenerating}>
+                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Згенерувати текст за заголовком
+                </Button>
+            </div>
+        )}
+
         <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={onCancel}>Скасувати</Button>
             <Button type="submit">Зберегти</Button>
