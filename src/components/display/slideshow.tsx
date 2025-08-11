@@ -150,7 +150,10 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-5xl font-medium leading-tight text-balance">{slide.content}</p>
+                <p 
+                    className="text-5xl font-medium leading-tight text-balance whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: slide.content }}
+                ></p>
               </CardContent>
             </Card>
         </div>
