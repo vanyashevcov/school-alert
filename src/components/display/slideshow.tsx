@@ -83,26 +83,34 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
     return <div id={playerContainerId} className="w-full h-full"></div>;
 }
 
-const textSlideConfig: Record<TextSlideType, { icon: React.FC<any>, cardClass: string, titleClass: string }> = {
+const textSlideConfig: Record<TextSlideType, { icon: React.FC<any>, cardClass: string, titleClass: string, iconClass: string, backgroundClass: string }> = {
     normal: {
         icon: Info,
         cardClass: 'bg-background/80 border-accent',
-        titleClass: 'text-primary'
+        titleClass: 'text-primary',
+        iconClass: 'text-primary',
+        backgroundClass: 'bg-slate-50',
     },
     announcement: {
         icon: Megaphone,
-        cardClass: 'bg-blue-800/80 border-blue-400',
-        titleClass: 'text-blue-100'
+        cardClass: 'bg-blue-500/10 border-blue-500/30 text-blue-900 dark:text-blue-100',
+        titleClass: 'text-blue-600 dark:text-blue-200',
+        iconClass: 'text-blue-500 dark:text-blue-300',
+        backgroundClass: 'from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50',
     },
     warning: {
         icon: AlertTriangle,
-        cardClass: 'bg-yellow-600/80 border-yellow-300',
-        titleClass: 'text-yellow-100'
+        cardClass: 'bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-100',
+        titleClass: 'text-amber-600 dark:text-amber-200',
+        iconClass: 'text-amber-500 dark:text-amber-300',
+        backgroundClass: 'from-amber-100 to-amber-200 dark:from-amber-900/50 dark:to-amber-800/50',
     },
     urgent: {
         icon: Siren,
-        cardClass: 'bg-red-800/80 border-red-400',
-        titleClass: 'text-red-100'
+        cardClass: 'bg-red-500/10 border-red-500/30 text-red-900 dark:text-red-100',
+        titleClass: 'text-red-600 dark:text-red-200',
+        iconClass: 'text-red-500 dark:text-red-300',
+        backgroundClass: 'from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50',
     }
 }
 
@@ -132,16 +140,16 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
       const config = textSlideConfig[slide.textType || 'normal'];
       const Icon = config.icon;
       return (
-        <div className="flex items-center justify-center h-full bg-primary/90 backdrop-blur-sm p-8">
-            <Card className={cn("max-w-4xl w-full text-center border-2 shadow-2xl transition-colors duration-500", config.cardClass)}>
+        <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8", config.backgroundClass)}>
+            <Card className={cn("max-w-5xl w-full text-center border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass)}>
               <CardHeader>
-                 <div className="flex justify-center items-center gap-4">
-                    <Icon className={cn("h-12 w-12", config.titleClass)} />
-                    <CardTitle className={cn("text-5xl font-bold", config.titleClass)}>{slide.title}</CardTitle>
+                 <div className="flex flex-col justify-center items-center gap-4">
+                    <Icon className={cn("h-24 w-24", config.iconClass)} />
+                    {slide.title && <CardTitle className={cn("text-6xl font-bold", config.titleClass)}>{slide.title}</CardTitle>}
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl text-foreground/90">{slide.content}</p>
+                <p className="text-5xl font-medium">{slide.content}</p>
               </CardContent>
             </Card>
         </div>
