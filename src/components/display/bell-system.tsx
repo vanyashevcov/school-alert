@@ -7,7 +7,7 @@ import { useInterval } from '@/hooks/use-interval';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { LessonTime, DayOfWeek } from '@/lib/types';
-import { format } from 'date-fns';
+import { format, getDay } from 'date-fns';
 
 const dayMapping: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
@@ -16,7 +16,7 @@ export default function BellSystem() {
   const [lastPlayed, setLastPlayed] = useState<string | null>(null);
 
   useEffect(() => {
-    const today = dayMapping[new Date().getDay()];
+    const today = dayMapping[getDay(new Date())];
     const q = query(collection(db, 'lessonSchedule'), where('day', '==', today), orderBy('startTime', 'asc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -50,7 +50,7 @@ export default function BellSystem() {
       const label = isStart ? `Початок уроку ${shouldPlay.lessonNumber}` : `Кінець уроку ${shouldPlay.lessonNumber}`;
       console.log(`Playing bell for ${label} at ${currentTime}`);
       
-      Tone.start();
+      Tone.start().catch(e => console.error("Tone.start() failed", e));
       const synth = new Tone.Synth().toDestination();
       
       if (isStart) {

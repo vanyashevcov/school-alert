@@ -62,9 +62,9 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTime, setEditingTime] = useState<LessonTime | null>(null);
   const { toast } = useToast();
-  const scheduleCollectionRef = collection(db, 'lessonSchedule');
-
+  
   useEffect(() => {
+    const scheduleCollectionRef = collection(db, 'lessonSchedule');
     const q = query(scheduleCollectionRef, where('day', '==', day), orderBy('startTime', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as LessonTime[];
@@ -75,6 +75,7 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
 
    const handleSave = async (lessonTimeData: Omit<LessonTime, 'id'>) => {
     try {
+        const scheduleCollectionRef = collection(db, 'lessonSchedule');
         if (editingTime) {
             const timeDoc = doc(db, 'lessonSchedule', editingTime.id);
             await updateDoc(timeDoc, lessonTimeData);
