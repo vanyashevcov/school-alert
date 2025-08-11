@@ -23,11 +23,12 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
         />
       );
     case 'video':
-      // Key change here to re-mount the iframe when the slide becomes active, helping with autoplay policies.
-      // Added allowfullscreen and other recommended attributes.
+      // Only render the iframe when the slide is active to prevent background audio playback.
+      if (!isActive) {
+        return null;
+      }
       return (
         <iframe
-          key={isActive ? slide.id : undefined}
           src={`https://www.youtube.com/embed/${slide.content}?autoplay=1&controls=0&loop=1&playlist=${slide.content}&enablejsapi=1`}
           title={slide.title || 'YouTube video player'}
           frameBorder="0"
