@@ -93,7 +93,6 @@ export default function NewsTickerManager() {
       <CardHeader>
         <div className="flex justify-between items-start">
             <div>
-                <CardTitle>Біжучий рядок новин</CardTitle>
                 <CardDescription>Керуйте новинами, що відображаються у біжучому рядку.</CardDescription>
             </div>
              <Dialog open={isFormOpen} onOpenChange={(isOpen) => {
