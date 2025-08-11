@@ -11,13 +11,6 @@ import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) {
-  const [origin, setOrigin] = useState('');
-
-  useEffect(() => {
-    // This ensures window is defined, avoiding SSR issues.
-    setOrigin(window.location.origin);
-  }, []);
-
   switch (slide.type) {
     case 'image':
       return (
@@ -32,7 +25,7 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
     case 'video':
       return (
         <iframe
-          src={`https://www.youtube.com/embed/${slide.content}?autoplay=${isActive ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${slide.content}&enablejsapi=1&origin=${origin}`}
+          src={`https://www.youtube.com/embed/${slide.content}?autoplay=${isActive ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${slide.content}`}
           title={slide.title || 'YouTube video player'}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
