@@ -3,7 +3,7 @@
 
 import { FileVideo, BellRing, School, LogOut, Newspaper } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -24,11 +24,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   
-  const tab = searchParams.get('tab');
-
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/admin');
@@ -49,11 +46,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const isDashboard = pathname === '/admin/dashboard';
-  const isContentActive = isDashboard && (!tab || tab === 'content');
-  const isScheduleActive = isDashboard && tab === 'schedule';
-  const isNewsActive = isDashboard && tab === 'news';
-
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
@@ -69,19 +61,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SidebarContent>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Керування контентом" href="/admin/dashboard" isActive={isContentActive}>
+                        <SidebarMenuButton tooltip="Керування контентом" href="/admin/dashboard" isActive={pathname === '/admin/dashboard'}>
                             <FileVideo />
                             <span className="truncate">Контент</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Розклад дзвінків" href="/admin/dashboard?tab=schedule" isActive={isScheduleActive}>
+                        <SidebarMenuButton tooltip="Розклад дзвінків" href="/admin/schedule" isActive={pathname === '/admin/schedule'}>
                             <BellRing />
                             <span className="truncate">Дзвінки</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton tooltip="Рядок новин" href="/admin/dashboard?tab=news" isActive={isNewsActive}>
+                        <SidebarMenuButton tooltip="Рядок новин" href="/admin/news" isActive={pathname === '/admin/news'}>
                             <Newspaper />
                             <span className="truncate">Новини</span>
                         </SidebarMenuButton>

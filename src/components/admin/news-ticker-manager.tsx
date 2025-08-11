@@ -89,8 +89,8 @@ export default function NewsTickerManager() {
   }
 
   return (
-    <Card className="h-full border-0 border-t rounded-none shadow-none flex flex-col">
-      <CardHeader className="px-8 pt-6">
+    <Card className="h-full border-0 rounded-none shadow-none flex flex-col">
+      <CardHeader>
         <div className="flex justify-between items-start">
             <div>
                 <CardTitle>Біжучий рядок новин</CardTitle>
@@ -121,7 +121,7 @@ export default function NewsTickerManager() {
             </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 px-8">
+      <CardContent className="flex-1">
         <Table>
           <TableHeader>
             <TableRow>
