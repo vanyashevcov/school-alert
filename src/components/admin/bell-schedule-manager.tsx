@@ -179,19 +179,19 @@ export default function BellScheduleManager() {
   const [activeTab, setActiveTab] = useState<DayOfWeek>('monday');
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
         <div className="space-y-1 mb-4 px-4 md:px-8">
             <h2 className="text-2xl font-bold tracking-tight">Розклад дзвінків</h2>
             <p className="text-muted-foreground">Керуйте часом початку та кінця уроків для кожного дня тижня.</p>
         </div>
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DayOfWeek)} className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DayOfWeek)} className="w-full flex-1 flex flex-col">
             <TabsList className="mx-4 md:mx-8">
                 {daysOfWeek.map(({ value, label }) => (
                     <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
                 ))}
             </TabsList>
             {daysOfWeek.map(({ value, label }) => (
-                <TabsContent key={value} value={value} className="space-y-4 m-0">
+                <TabsContent key={value} value={value} className="space-y-4 m-0 flex-1">
                     <DailySchedule day={value} label={label} />
                 </TabsContent>
             ))}
