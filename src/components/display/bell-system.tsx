@@ -41,6 +41,8 @@ export default function BellSystem() {
   }, []);
 
   useInterval(() => {
+    if (Tone.context.state !== 'running') return;
+
     const now = new Date();
     const currentTime = format(now, 'HH:mm');
 
@@ -51,7 +53,6 @@ export default function BellSystem() {
       const label = isStart ? `Початок уроку ${shouldPlay.lessonNumber}` : `Кінець уроку ${shouldPlay.lessonNumber}`;
       console.log(`Playing bell for ${label} at ${currentTime}`);
       
-      Tone.start().catch(e => console.error("Tone.start() failed", e));
       const synth = new Tone.Synth().toDestination();
       
       if (isStart) {

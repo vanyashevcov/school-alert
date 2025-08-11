@@ -66,12 +66,13 @@ export default function AirRaidAlert() {
   useEffect(() => {
     if (alertState?.shouldAlert && !lastAlertStatus) {
       // Alert has just become active
-      Tone.start();
-      const synth = new Tone.PolySynth(Tone.Synth).toDestination();
-      synth.triggerAttackRelease(['C4', 'E4', 'G#4'], '2s');
+      if (Tone.context.state === 'running') {
+        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        synth.triggerAttackRelease(['C4', 'E4', 'G#4'], '2s');
+      }
     }
     setLastAlertStatus(alertState?.shouldAlert ?? null);
-  }, [alertState]);
+  }, [alertState, lastAlertStatus]);
 
   if (!alertState || !alertState.shouldAlert) {
     return null;
