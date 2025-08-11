@@ -37,7 +37,7 @@ export default function TimeAndDate() {
         {format(currentTime, 'HH:mm:ss')}
       </div>
       <div className="text-xl font-bold capitalize">
-        {format(currentTime, 'eeee, d MMMM yyyy', { locale: uk })}
+        {format(currentTime, 'eeee, dd.MM.yyyy', { locale: uk })}
       </div>
     </div>
   );
