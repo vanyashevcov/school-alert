@@ -18,14 +18,14 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
           src={slide.content}
           alt={slide.title || 'Зображення для слайду'}
           fill
-          className="object-contain h-full"
+          className="object-cover h-full"
           data-ai-hint="school life"
         />
       );
     case 'video':
       return (
         <iframe
-          src={`https://www.youtube.com/embed/${slide.content}?autoplay=${isActive ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${slide.content}`}
+          src={`https://www.youtube.com/embed/${slide.content}?autoplay=${isActive ? 1 : 0}&mute=1&controls=0&loop=1&playlist=${slide.content}&enablejsapi=1`}
           title={slide.title || 'YouTube video player'}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
