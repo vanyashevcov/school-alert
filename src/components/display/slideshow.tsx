@@ -150,13 +150,11 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
                     {slide.title && <CardTitle className={cn("text-4xl md:text-6xl font-bold drop-shadow-sm", config.titleClass)}>{slide.title}</CardTitle>}
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 overflow-y-auto">
-                <ScrollArea className="h-full pr-6">
-                    <p 
-                        className="text-3xl md:text-5xl font-medium leading-tight text-balance whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{ __html: slide.content }}
-                    ></p>
-                </ScrollArea>
+              <CardContent className="flex-1 overflow-y-auto p-6">
+                <p 
+                    className="text-3xl md:text-5xl font-medium leading-tight text-balance whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: slide.content }}
+                ></p>
               </CardContent>
             </Card>
         </div>
