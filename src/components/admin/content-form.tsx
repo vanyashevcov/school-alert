@@ -12,12 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import type { SlideContent } from '@/lib/types';
 import { generateSchoolContent } from '@/ai/flows/content-generation';
 import { useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const formSchema = z.object({
   type: z.enum(['text', 'image', 'video']),
   textType: z.enum(['normal', 'announcement', 'warning', 'urgent']).optional(),
+  textAlign: z.enum(['left', 'center', 'right']).optional(),
   title: z.string().optional(),
   content: z.string().min(1, 'Контент не може бути порожнім.'),
   duration: z.coerce.number().min(1, 'Тривалість має бути не менше 1 секунди.'),
@@ -38,9 +40,11 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
         ...slide,
         duration: slide.duration || 10,
         textType: slide.textType || 'normal',
+        textAlign: slide.textAlign || 'center',
     } : {
       type: 'text',
       textType: 'normal',
+      textAlign: 'center',
       title: '',
       content: '',
       duration: 10,
@@ -55,6 +59,7 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
     const finalData = {
         ...data,
         textType: data.type === 'text' ? data.textType : undefined,
+        textAlign: data.type === 'text' ? data.textAlign : undefined,
     }
     onSave(finalData);
   }
@@ -121,30 +126,51 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
         </div>
         
         {watchType === 'text' && (
-             <FormField
-                control={form.control}
-                name="textType"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Тип текстового слайду</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Оберіть тип тексту" /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="normal">Звичайне</SelectItem>
-                            <SelectItem value="announcement">Оголошення</SelectItem>
-                            <SelectItem value="warning">Увага</SelectItem>
-                            <SelectItem value="urgent">Терміново</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormDescription>
-                        Це змінить вигляд текстового слайду.
-                    </FormDescription>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+                 <FormField
+                    control={form.control}
+                    name="textType"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Тип текстового слайду</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger><SelectValue placeholder="Оберіть тип тексту" /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="normal">Звичайне</SelectItem>
+                                <SelectItem value="announcement">Оголошення</SelectItem>
+                                <SelectItem value="warning">Увага</SelectItem>
+                                <SelectItem value="urgent">Терміново</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="textAlign"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Вирівнювання тексту</FormLabel>
+                            <FormControl>
+                                <ToggleGroup 
+                                    type="single"
+                                    defaultValue={field.value}
+                                    onValueChange={field.onChange}
+                                    className="w-full"
+                                    >
+                                    <ToggleGroupItem value="left" aria-label="Вирівняти по лівому краю" className="w-full"><AlignLeft/></ToggleGroupItem>
+                                    <ToggleGroupItem value="center" aria-label="Вирівняти по центру" className="w-full"><AlignCenter/></ToggleGroupItem>
+                                    <ToggleGroupItem value="right" aria-label="Вирівняти по правому краю" className="w-full"><AlignRight/></ToggleGroupItem>
+                                </ToggleGroup>
+                            </FormControl>
+                             <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
         )}
 
 

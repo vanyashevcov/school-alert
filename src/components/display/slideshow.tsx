@@ -139,9 +139,10 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
     case 'text': {
       const config = textSlideConfig[slide.textType || 'normal'];
       const Icon = config.icon;
+      const textAlign = slide.textAlign || 'center';
       return (
         <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8", config.backgroundClass)}>
-            <Card className={cn("max-w-5xl w-full text-center border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass)}>
+            <Card className={cn("max-w-5xl w-full border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass, `text-${textAlign}`)}>
               <CardHeader>
                  <div className="flex flex-col justify-center items-center gap-4">
                     <Icon className={cn("h-24 w-24 drop-shadow-lg", config.iconClass)} />
