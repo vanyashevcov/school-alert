@@ -11,6 +11,27 @@ import { format, getDay } from 'date-fns';
 
 const dayMapping: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
+function playSchoolBell() {
+    if (Tone.context.state !== 'running') return;
+
+    // Create a more realistic, longer bell sound
+    const bell = new Tone.MetalSynth({
+        frequency: 250,
+        envelope: {
+            attack: 0.001,
+            decay: 1.4,
+            release: 0.2,
+        },
+        harmonicity: 5.1,
+        modulationIndex: 32,
+        resonance: 4000,
+        octaves: 1.5,
+    }).toDestination();
+
+    // Play for 4 seconds
+    bell.triggerAttackRelease("C4", "4s");
+}
+
 export default function BellSystem() {
   const [schedule, setSchedule] = useState<LessonTime[]>([]);
   const [lastPlayed, setLastPlayed] = useState<string | null>(null);
@@ -53,16 +74,7 @@ export default function BellSystem() {
       const label = isStart ? `Початок уроку ${shouldPlay.lessonNumber}` : `Кінець уроку ${shouldPlay.lessonNumber}`;
       console.log(`Playing bell for ${label} at ${currentTime}`);
       
-      const synth = new Tone.Synth().toDestination();
-      
-      if (isStart) {
-        // A simple two-tone melody for the start
-        synth.triggerAttackRelease('C5', '8n', Tone.now());
-        synth.triggerAttackRelease('G5', '8n', Tone.now() + 0.2);
-      } else {
-        // A single, slightly longer tone for the end
-        synth.triggerAttackRelease('G5', '4n', Tone.now());
-      }
+      playSchoolBell();
 
       setLastPlayed(currentTime);
     }
