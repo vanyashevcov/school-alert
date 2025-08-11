@@ -14,6 +14,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const daysOfWeek: { value: DayOfWeek, label: string }[] = [
     { value: 'monday', label: 'Понеділок' },
@@ -99,7 +110,6 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
   };
   
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Ви впевнені, що хочете видалити цей урок?")) return;
     try {
         const timeDoc = doc(db, 'lessonSchedule', id);
         await deleteDoc(timeDoc);
@@ -160,7 +170,23 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                     <TableCell className="font-mono">{item.endTime}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>Видалити</Button>
+                       <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">Видалити</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Ви впевнені?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Цю дію неможливо скасувати. Це назавжди видалить запис з розкладу.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(item.id)}>Видалити</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 )) : (
