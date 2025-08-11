@@ -4,11 +4,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { type SlideContent } from '@/lib/types';
+import { type SlideContent, type TextSlideType } from '@/lib/types';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
+import { Megaphone, AlertTriangle, Siren, Info } from 'lucide-react';
 
 // Augment the window object
 declare global {
@@ -82,6 +83,29 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
     return <div id={playerContainerId} className="w-full h-full"></div>;
 }
 
+const textSlideConfig: Record<TextSlideType, { icon: React.FC<any>, cardClass: string, titleClass: string }> = {
+    normal: {
+        icon: Info,
+        cardClass: 'bg-background/80 border-accent',
+        titleClass: 'text-primary'
+    },
+    announcement: {
+        icon: Megaphone,
+        cardClass: 'bg-blue-800/80 border-blue-400',
+        titleClass: 'text-blue-100'
+    },
+    warning: {
+        icon: AlertTriangle,
+        cardClass: 'bg-yellow-600/80 border-yellow-300',
+        titleClass: 'text-yellow-100'
+    },
+    urgent: {
+        icon: Siren,
+        cardClass: 'bg-red-800/80 border-red-400',
+        titleClass: 'text-red-100'
+    }
+}
+
 
 function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideContent; isActive: boolean; onVideoEnd: () => void; onVideoReady: () => void; }) {
   switch (slide.type) {
@@ -104,19 +128,25 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
             isActive={isActive}
         />
       );
-    case 'text':
+    case 'text': {
+      const config = textSlideConfig[slide.textType || 'normal'];
+      const Icon = config.icon;
       return (
         <div className="flex items-center justify-center h-full bg-primary/90 backdrop-blur-sm p-8">
-            <Card className="max-w-4xl text-center bg-background/80 border-2 border-accent shadow-2xl">
+            <Card className={cn("max-w-4xl w-full text-center border-2 shadow-2xl transition-colors duration-500", config.cardClass)}>
               <CardHeader>
-                <CardTitle className="text-5xl font-bold text-primary">{slide.title}</CardTitle>
+                 <div className="flex justify-center items-center gap-4">
+                    <Icon className={cn("h-12 w-12", config.titleClass)} />
+                    <CardTitle className={cn("text-5xl font-bold", config.titleClass)}>{slide.title}</CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl text-foreground/80">{slide.content}</p>
+                <p className="text-4xl text-foreground/90">{slide.content}</p>
               </CardContent>
             </Card>
         </div>
       );
+    }
     default:
       return null;
   }

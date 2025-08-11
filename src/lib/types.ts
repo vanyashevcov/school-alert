@@ -1,13 +1,16 @@
 
 import type { Timestamp } from 'firebase/firestore';
 
+export type TextSlideType = 'normal' | 'announcement' | 'warning' | 'urgent';
+
 export type SlideContent = {
   id: string;
   type: 'text' | 'image' | 'video';
   content: string;
   title?: string;
   duration: number; // in seconds
-  createdAt?: Timestamp; 
+  createdAt?: Timestamp;
+  textType?: TextSlideType;
 };
 
 export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';

@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   type: z.enum(['text', 'image', 'video']),
+  textType: z.enum(['normal', 'announcement', 'warning', 'urgent']).optional(),
   title: z.string().optional(),
   content: z.string().min(1, 'Контент не може бути порожнім.'),
   duration: z.coerce.number().min(1, 'Тривалість має бути не менше 1 секунди.'),
@@ -36,8 +37,10 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
     defaultValues: slide ? {
         ...slide,
         duration: slide.duration || 10,
+        textType: slide.textType || 'normal',
     } : {
       type: 'text',
+      textType: 'normal',
       title: '',
       content: '',
       duration: 10,
@@ -49,7 +52,11 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
   const watchType = form.watch('type');
 
   function onSubmit(data: ContentFormValues) {
-    onSave(data);
+    const finalData = {
+        ...data,
+        textType: data.type === 'text' ? data.textType : undefined,
+    }
+    onSave(finalData);
   }
 
   const handleGenerateContent = async () => {
@@ -108,6 +115,34 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
             )}
         </div>
         
+        {watchType === 'text' && (
+             <FormField
+                control={form.control}
+                name="textType"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Тип текстового слайду</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Оберіть тип тексту" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="normal">Звичайне</SelectItem>
+                            <SelectItem value="announcement">Оголошення</SelectItem>
+                            <SelectItem value="warning">Увага</SelectItem>
+                            <SelectItem value="urgent">Терміново</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormDescription>
+                        Це змінить вигляд текстового слайду.
+                    </FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        )}
+
+
         <FormField
             control={form.control}
             name="title"
