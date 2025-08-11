@@ -72,8 +72,8 @@ export default function ContentManager() {
   }
 
   return (
-    <Card className="h-full border-0 rounded-none shadow-none flex flex-col">
-      <CardHeader className="px-4 md:px-8">
+    <Card className="h-full border-0 border-t rounded-none shadow-none flex flex-col">
+      <CardHeader className="px-8 pt-6">
         <div className="flex justify-between items-start">
             <div>
                 <CardTitle>Слайди для показу</CardTitle>
@@ -101,7 +101,7 @@ export default function ContentManager() {
             </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 px-4 md:px-8">
+      <CardContent className="flex-1 px-8">
         <Table>
           <TableHeader>
             <TableRow>
