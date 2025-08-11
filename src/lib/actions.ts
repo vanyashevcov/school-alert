@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase'; // Assuming firebase is initialized here
+import fetch from 'node-fetch';
 
 const loginSchema = z.object({
   email: z.string().email("Невірний формат електронної пошти"),
@@ -49,4 +50,37 @@ export async function login(prevState: any, formData: FormData) {
 // Dummy action, as we can't sign out from the server without custom logic
 export async function logout() {
     redirect('/');
+}
+
+type AirRaidAlert = {
+    id: string;
+    location_title: string;
+    location_type: string;
+    alert_type: string;
+}
+
+export async function getAirRaidAlerts(): Promise<AirRaidAlert[]> {
+    const apiKey = process.env.ALERTS_IN_UA_API_KEY;
+    if (!apiKey) {
+        console.error("ALERTS_IN_UA_API_KEY is not set in .env.local");
+        return [];
+    }
+
+    try {
+        const response = await fetch('https://alerts.in.ua/v1/alerts/active.json', {
+            headers: {
+                'X-API-Key': apiKey,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`API call failed with status: ${response.status}`);
+        }
+
+        const data = (await response.json()) as { alerts: AirRaidAlert[] };
+        return data.alerts;
+    } catch (error) {
+        console.error('Failed to fetch air raid alerts:', error);
+        return [];
+    }
 }

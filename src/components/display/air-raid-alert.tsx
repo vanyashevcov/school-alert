@@ -4,24 +4,36 @@ import { useState, useEffect } from 'react';
 import * as Tone from 'tone';
 import { Siren } from 'lucide-react';
 import { useInterval } from '@/hooks/use-interval';
-import { analyzeAirRaidAlert, type AirRaidAlertInput, type AirRaidAlertOutput } from '@/ai/flows/air-raid-alert-reasoning';
+import { analyzeAirRaidAlert, type AirRaidAlertOutput } from '@/ai/flows/air-raid-alert-reasoning';
 import { cn } from '@/lib/utils';
+import { getAirRaidAlerts } from '@/lib/actions';
 
-// Mock API response cycle
-const mockAlerts = [
-  { city: 'Kyiv', alertStatus: true, alertMessage: 'Threat of ballistic missiles' },
-  { city: 'Poltava', alertStatus: true, alertMessage: 'UAV attack' },
-  { city: 'Poltava', alertStatus: false, alertMessage: 'All clear' },
-  { city: 'Lviv', alertStatus: true, alertMessage: 'Airborne threat' },
-];
 
-let mockIndex = 0;
+async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
+  try {
+    const alerts = await getAirRaidAlerts();
+    const poltavaAlert = alerts.find(alert => 
+        alert.location_title.includes('Полтава') && 
+        !alert.location_title.includes('область') && // Exclude full oblast alerts
+        alert.alert_type === 'air_raid' // Check for air raid type
+    );
 
-async function fetchAirRaidStatus(): Promise<AirRaidAlertInput> {
-  // This is a mock. In a real app, you would fetch from alerts.in.ua
-  const alert = mockAlerts[mockIndex];
-  mockIndex = (mockIndex + 1) % mockAlerts.length;
-  return alert;
+    if (poltavaAlert) {
+      // Alert is active for Poltava city
+      return analyzeAirRaidAlert({
+        city: poltavaAlert.location_title,
+        alertStatus: true,
+        alertMessage: `Повітряна тривога в ${poltavaAlert.location_title}`,
+      });
+    } else {
+      // No active alert for Poltava city
+      return { shouldAlert: false, reason: 'Відбій тривоги або відсутність загрози для Полтави.' };
+    }
+  } catch (error) {
+    console.error('Error fetching air raid status:', error);
+    // In case of error, assume no alert to avoid false positives
+    return { shouldAlert: false, reason: 'Помилка отримання даних.' };
+  }
 }
 
 export default function AirRaidAlert() {
@@ -33,12 +45,11 @@ export default function AirRaidAlert() {
     if (isChecking) return;
     setIsChecking(true);
     try {
-      const alertData = await fetchAirRaidStatus();
-      const analysis = await analyzeAirRaidAlert(alertData);
+      const analysis = await checkPoltavaAlert();
       setAlertState(analysis);
     } catch (error) {
       console.error('Error analyzing air raid alert:', error);
-      setAlertState({ shouldAlert: false, reason: 'Error fetching data.' });
+      setAlertState({ shouldAlert: false, reason: 'Помилка отримання даних.' });
     } finally {
       setIsChecking(false);
     }
@@ -49,18 +60,17 @@ export default function AirRaidAlert() {
     checkAlerts();
   }, []);
   
-  useInterval(checkAlerts, 30000); // Poll every 30 seconds
+  // Check every 60 seconds
+  useInterval(checkAlerts, 60000); 
 
   useEffect(() => {
-    if (alertState && alertState.shouldAlert && !lastAlertStatus) {
+    if (alertState?.shouldAlert && !lastAlertStatus) {
       // Alert has just become active
       Tone.start();
       const synth = new Tone.PolySynth(Tone.Synth).toDestination();
       synth.triggerAttackRelease(['C4', 'E4', 'G#4'], '2s');
     }
-    if (alertState) {
-        setLastAlertStatus(alertState.shouldAlert);
-    }
+    setLastAlertStatus(alertState?.shouldAlert ?? null);
   }, [alertState]);
 
   if (!alertState || !alertState.shouldAlert) {
