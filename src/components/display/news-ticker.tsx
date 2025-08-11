@@ -23,7 +23,7 @@ export default function NewsTicker() {
     return null; // Don't render anything if there's no news
   }
 
-  const allNewsText = news.map(item => item.text).join(' +++ ');
+  const allNewsText = news.map(item => item.text).join(' * ');
 
   return (
     <div className="bg-primary text-primary-foreground h-full flex items-center overflow-hidden">
@@ -44,8 +44,3 @@ export default function NewsTicker() {
     </div>
   );
 }
-
-// Add animation to tailwind.config.ts if it's not there
-// Or add a style tag here. Let's add it to globals.css
-// The animation will be in tailwind config.
-
