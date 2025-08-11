@@ -4,11 +4,11 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { type SlideContent } from '@/lib/types';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Script from 'next/script';
+import { cn } from '@/lib/utils';
 
 // Augment the window object
 declare global {
@@ -83,7 +83,7 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
 }
 
 
-function Slide({ slide, isActive, onVideoEnd, onVideoReady }: { slide: SlideContent; isActive: boolean; onVideoEnd: () => void; onVideoReady: () => void; }) {
+function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideContent; isActive: boolean; onVideoEnd: () => void; onVideoReady: () => void; }) {
   switch (slide.type) {
     case 'image':
       return (
@@ -123,7 +123,6 @@ function Slide({ slide, isActive, onVideoEnd, onVideoReady }: { slide: SlideCont
 }
 
 export default function Slideshow() {
-  const [api, setApi] = useState<CarouselApi>();
   const [slides, setSlides] = useState<SlideContent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isApiReady, setIsApiReady] = useState(false);
@@ -146,13 +145,15 @@ export default function Slideshow() {
   }, []);
 
   const handleNext = () => {
-    api?.scrollNext();
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
   
   const setupTimeout = () => {
     if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
     }
+    if (slides.length === 0) return;
+    
     const currentSlideData = slides[currentSlide];
     if (!currentSlideData || currentSlideData.type === 'video') return;
 
@@ -160,22 +161,14 @@ export default function Slideshow() {
   }
 
   useEffect(() => {
-    if (!api) return;
-
-    const onSelect = () => {
-      setCurrentSlide(api.selectedScrollSnap());
-    };
-
-    api.on('select', onSelect);
     setupTimeout();
     
     return () => {
-      api.off('select', onSelect);
       if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
       }
     };
-  }, [api, currentSlide, slides]);
+  }, [currentSlide, slides]);
   
 
   if (slides.length === 0) {
@@ -183,26 +176,26 @@ export default function Slideshow() {
   }
 
   return (
-    <>
-    <Script src="https://www.youtube.com/iframe_api" strategy="lazyOnload" />
-    <Carousel setApi={setApi} className="w-full h-full" opts={{ loop: true }}>
-      <CarouselContent className="h-full">
-        {slides.map((slide, index) => (
-          <CarouselItem key={slide.id}>
-            <div className="relative w-full h-full bg-black">
-                <Slide 
-                    slide={slide} 
-                    isActive={index === currentSlide} 
-                    onVideoEnd={handleNext}
-                    onVideoReady={() => {
-                        if(timeoutRef.current) clearTimeout(timeoutRef.current)
-                    }}
-                />
-            </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-    </Carousel>
-    </>
+    <div className="relative w-full h-full bg-black">
+      <Script src="https://www.youtube.com/iframe_api" strategy="lazyOnload" />
+      {slides.map((slide, index) => (
+        <div
+          key={slide.id}
+          className={cn(
+            'absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out',
+            index === currentSlide ? 'opacity-100' : 'opacity-0'
+          )}
+        >
+          <Slide 
+              slide={slide} 
+              isActive={index === currentSlide} 
+              onVideoEnd={handleNext}
+              onVideoReady={() => {
+                  if(timeoutRef.current) clearTimeout(timeoutRef.current)
+              }}
+          />
+        </div>
+      ))}
+    </div>
   );
 }
