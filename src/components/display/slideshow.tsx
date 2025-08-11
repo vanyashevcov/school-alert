@@ -18,7 +18,7 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
           src={slide.content}
           alt={slide.title || 'Зображення для слайду'}
           fill
-          className="object-cover h-full"
+          className="object-contain h-full"
           data-ai-hint="school life"
         />
       );
