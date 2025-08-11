@@ -1,7 +1,9 @@
+
 'use client';
 
-import { useState } from 'react';
-import { initialBellSchedule } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { BellTime } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,14 +12,15 @@ import { PlusCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
-function ScheduleForm({ onSave, onCancel, bellTime }: { onSave: (data: BellTime) => void, onCancel: () => void, bellTime: BellTime | null }) {
+function ScheduleForm({ onSave, onCancel, bellTime }: { onSave: (data: Omit<BellTime, 'id'>) => void, onCancel: () => void, bellTime: BellTime | null }) {
     const [time, setTime] = useState(bellTime?.time || '08:00');
     const [label, setLabel] = useState(bellTime?.label || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ id: bellTime?.id || Date.now().toString(), time, label });
+        onSave({ time, label });
     }
 
     return (
@@ -39,18 +42,37 @@ function ScheduleForm({ onSave, onCancel, bellTime }: { onSave: (data: BellTime)
 }
 
 export default function BellScheduleManager() {
-  const [schedule, setSchedule] = useState<BellTime[]>(initialBellSchedule);
+  const [schedule, setSchedule] = useState<BellTime[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTime, setEditingTime] = useState<BellTime | null>(null);
+  const { toast } = useToast();
+  const scheduleCollectionRef = collection(db, 'bellSchedule');
 
-   const handleSave = (bellTimeData: BellTime) => {
-    if (editingTime) {
-      setSchedule(schedule.map(s => s.id === bellTimeData.id ? bellTimeData : s).sort((a,b) => a.time.localeCompare(b.time)));
-    } else {
-      setSchedule([...schedule, bellTimeData].sort((a,b) => a.time.localeCompare(b.time)));
+  useEffect(() => {
+    const q = query(scheduleCollectionRef, orderBy('time', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as BellTime[];
+        setSchedule(scheduleData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+   const handleSave = async (bellTimeData: Omit<BellTime, 'id'>) => {
+    try {
+        if (editingTime) {
+            const timeDoc = doc(db, 'bellSchedule', editingTime.id);
+            await updateDoc(timeDoc, bellTimeData);
+            toast({ title: 'Час оновлено!'});
+        } else {
+            await addDoc(scheduleCollectionRef, bellTimeData);
+            toast({ title: 'Час додано!'});
+        }
+        setEditingTime(null);
+        setIsFormOpen(false);
+    } catch (error) {
+        console.error("Error saving time: ", error);
+        toast({ variant: 'destructive', title: 'Помилка', description: 'Не вдалося зберегти час.'});
     }
-    setEditingTime(null);
-    setIsFormOpen(false);
   };
 
   const handleEdit = (bellTime: BellTime) => {
@@ -58,8 +80,15 @@ export default function BellScheduleManager() {
     setIsFormOpen(true);
   };
   
-  const handleDelete = (id: string) => {
-    setSchedule(schedule.filter(s => s.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+        const timeDoc = doc(db, 'bellSchedule', id);
+        await deleteDoc(timeDoc);
+        toast({ title: 'Час видалено.'});
+    } catch (error) {
+        console.error("Error deleting time: ", error);
+        toast({ variant: 'destructive', title: 'Помилка', description: 'Не вдалося видалити час.'});
+    }
   }
 
   return (

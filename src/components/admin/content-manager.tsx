@@ -1,15 +1,17 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { PlusCircle, FileText, Image as ImageIcon, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { initialSlides } from '@/lib/data';
 import type { SlideContent } from '@/lib/types';
 import { ContentForm } from './content-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '../ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 const getIcon = (type: SlideContent['type']) => {
     switch (type) {
@@ -20,18 +22,37 @@ const getIcon = (type: SlideContent['type']) => {
 }
 
 export default function ContentManager() {
-  const [slides, setSlides] = useState<SlideContent[]>(initialSlides);
+  const [slides, setSlides] = useState<SlideContent[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState<SlideContent | null>(null);
+  const { toast } = useToast();
+  const slidesCollectionRef = collection(db, 'slides');
 
-  const handleSave = (slideData: SlideContent) => {
-    if (editingSlide) {
-      setSlides(slides.map(s => s.id === slideData.id ? slideData : s));
-    } else {
-      setSlides([...slides, { ...slideData, id: Date.now().toString() }]);
+  useEffect(() => {
+    const q = query(slidesCollectionRef, orderBy('createdAt', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const slidesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as SlideContent[];
+        setSlides(slidesData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSave = async (slideData: Omit<SlideContent, 'id' | 'createdAt'>) => {
+    try {
+      if (editingSlide) {
+        const slideDoc = doc(db, 'slides', editingSlide.id);
+        await updateDoc(slideDoc, slideData);
+        toast({ title: 'Слайд оновлено!' });
+      } else {
+        await addDoc(slidesCollectionRef, { ...slideData, createdAt: new Date() });
+        toast({ title: 'Слайд додано!' });
+      }
+      setEditingSlide(null);
+      setIsFormOpen(false);
+    } catch (error) {
+        console.error("Error saving slide: ", error);
+        toast({ variant: 'destructive', title: 'Помилка', description: 'Не вдалося зберегти слайд.'});
     }
-    setEditingSlide(null);
-    setIsFormOpen(false);
   };
 
   const handleEdit = (slide: SlideContent) => {
@@ -39,8 +60,15 @@ export default function ContentManager() {
     setIsFormOpen(true);
   };
   
-  const handleDelete = (id: string) => {
-    setSlides(slides.filter(s => s.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+        const slideDoc = doc(db, 'slides', id);
+        await deleteDoc(slideDoc);
+        toast({ title: 'Слайд видалено.' });
+    } catch (error) {
+        console.error("Error deleting slide: ", error);
+        toast({ variant: 'destructive', title: 'Помилка', description: 'Не вдалося видалити слайд.'});
+    }
   }
 
   return (

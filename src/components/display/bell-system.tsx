@@ -1,13 +1,25 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import * as Tone from 'tone';
-import { initialBellSchedule } from '@/lib/data';
 import { useInterval } from '@/hooks/use-interval';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { BellTime } from '@/lib/types';
 
 export default function BellSystem() {
-  const [schedule] = useState(initialBellSchedule);
+  const [schedule, setSchedule] = useState<BellTime[]>([]);
   const [lastPlayed, setLastPlayed] = useState<string | null>(null);
+
+  useEffect(() => {
+    const q = query(collection(db, 'bellSchedule'), orderBy('time', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as BellTime[];
+        setSchedule(scheduleData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useInterval(() => {
     const now = new Date();

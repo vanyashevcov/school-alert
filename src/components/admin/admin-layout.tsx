@@ -1,7 +1,9 @@
+
 'use client';
 
 import { FileVideo, BellRing, School, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -13,8 +15,36 @@ import {
   SidebarInset,
   SidebarFooter
 } from '@/components/ui/sidebar';
+import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useEffect } from 'react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [user, loading] = useAuthState(auth);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/admin');
+    }
+  }, [user, loading, router]);
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    toast({ title: "Ви вийшли з системи." });
+    router.push('/admin');
+  };
+
+  if (loading || !user) {
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <p>Завантаження...</p>
+        </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
@@ -46,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SidebarFooter>
                 <SidebarMenu>
                      <SidebarMenuItem>
-                        <SidebarMenuButton href="/">
+                        <SidebarMenuButton onClick={handleLogout}>
                             <LogOut />
                             <span className="truncate">Вийти</span>
                         </SidebarMenuButton>

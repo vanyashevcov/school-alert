@@ -1,3 +1,4 @@
+
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,7 +26,7 @@ type ContentFormValues = z.infer<typeof formSchema>;
 
 interface ContentFormProps {
     slide: SlideContent | null;
-    onSave: (data: SlideContent) => void;
+    onSave: (data: ContentFormValues) => void;
     onCancel: () => void;
 }
 
@@ -47,8 +48,8 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
 
   const watchType = form.watch('type');
 
-  async function onSubmit(data: ContentFormValues) {
-    onSave({ ...data, id: slide?.id || '' });
+  function onSubmit(data: ContentFormValues) {
+    onSave(data);
   }
 
   const handleGenerateContent = async () => {

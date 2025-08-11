@@ -1,12 +1,14 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
-import { initialSlides } from '@/lib/data';
 import { type SlideContent } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) {
   switch (slide.type) {
@@ -50,9 +52,18 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
 
 export default function Slideshow() {
   const [api, setApi] = useState<CarouselApi>();
-  const [slides] = useState<SlideContent[]>(initialSlides);
+  const [slides, setSlides] = useState<SlideContent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const q = query(collection(db, 'slides'), orderBy('createdAt', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const slidesData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as SlideContent[];
+        setSlides(slidesData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (!api) return;
@@ -71,7 +82,7 @@ export default function Slideshow() {
     if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
     }
-    if (!api) return;
+    if (!api || slides.length === 0) return;
 
     const currentSlideData = slides[currentSlide];
     if (!currentSlideData) return;
@@ -87,8 +98,12 @@ export default function Slideshow() {
     };
   }, [api, currentSlide, slides]);
 
+  if (slides.length === 0) {
+    return <div className="flex items-center justify-center h-full">Завантаження слайдів...</div>
+  }
+
   return (
-    <Carousel setApi={setApi} className="w-full h-full">
+    <Carousel setApi={setApi} className="w-full h-full" opts={{ loop: true }}>
       <CarouselContent>
         {slides.map((slide, index) => (
           <CarouselItem key={slide.id}>
