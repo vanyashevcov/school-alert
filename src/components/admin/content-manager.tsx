@@ -112,20 +112,28 @@ export default function ContentManager() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {slides.map(slide => (
-              <TableRow key={slide.id}>
-                <TableCell>{getIcon(slide.type)}</TableCell>
-                <TableCell className="font-medium">
-                    <div className="font-bold">{slide.title || 'Без назви'}</div>
-                    <div className="text-sm text-muted-foreground truncate max-w-xs">{slide.content}</div>
-                </TableCell>
-                <TableCell className="text-right">{slide.duration} с.</TableCell>
-                <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(slide)}>Редагувати</Button>
-                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(slide.id)}>Видалити</Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {slides.length > 0 ? (
+                slides.map(slide => (
+                <TableRow key={slide.id}>
+                    <TableCell>{getIcon(slide.type)}</TableCell>
+                    <TableCell className="font-medium">
+                        <div className="font-bold">{slide.title || 'Без назви'}</div>
+                        <div className="text-sm text-muted-foreground truncate max-w-xs">{slide.content}</div>
+                    </TableCell>
+                    <TableCell className="text-right">{slide.duration} с.</TableCell>
+                    <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(slide)}>Редагувати</Button>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(slide.id)}>Видалити</Button>
+                    </TableCell>
+                </TableRow>
+                ))
+            ) : (
+                <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                       Слайдів ще немає. Додайте перший!
+                    </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>

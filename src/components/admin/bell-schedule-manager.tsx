@@ -111,8 +111,8 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
   }
 
   return (
-    <Card>
-        <CardHeader className="flex flex-row justify-between items-center">
+    <Card className="border-0 border-t rounded-none shadow-none">
+        <CardHeader className="flex flex-row justify-between items-center px-4 md:px-8">
             <div>
                 <CardTitle>{label}</CardTitle>
                 <CardDescription>Розклад для цього дня.</CardDescription>
@@ -142,7 +142,7 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                 </DialogContent>
             </Dialog>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 md:px-8">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -180,18 +180,18 @@ export default function BellScheduleManager() {
 
   return (
     <div>
-        <div className="space-y-1 mb-4">
+        <div className="space-y-1 mb-4 px-4 md:px-8">
             <h2 className="text-2xl font-bold tracking-tight">Розклад дзвінків</h2>
             <p className="text-muted-foreground">Керуйте часом початку та кінця уроків для кожного дня тижня.</p>
         </div>
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DayOfWeek)} className="w-full">
-            <TabsList>
+            <TabsList className="mx-4 md:mx-8">
                 {daysOfWeek.map(({ value, label }) => (
                     <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
                 ))}
             </TabsList>
             {daysOfWeek.map(({ value, label }) => (
-                <TabsContent key={value} value={value} className="space-y-4 mt-4">
+                <TabsContent key={value} value={value} className="space-y-4 m-0">
                     <DailySchedule day={value} label={label} />
                 </TabsContent>
             ))}
