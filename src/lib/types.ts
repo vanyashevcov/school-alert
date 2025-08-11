@@ -12,6 +12,7 @@ export type SlideContent = {
   createdAt?: Timestamp;
   textType?: TextSlideType;
   textAlign?: 'left' | 'center' | 'right';
+  fontSize?: number;
 };
 
 export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';

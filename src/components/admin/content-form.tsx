@@ -15,11 +15,13 @@ import { useState } from 'react';
 import { Sparkles, Loader2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Slider } from '../ui/slider';
 
 const formSchema = z.object({
   type: z.enum(['text', 'image', 'video']),
   textType: z.enum(['normal', 'announcement', 'warning', 'urgent']).optional(),
   textAlign: z.enum(['left', 'center', 'right']).optional(),
+  fontSize: z.coerce.number().min(16).max(128).optional(),
   title: z.string().optional(),
   content: z.string().min(1, 'Контент не може бути порожнім.'),
   duration: z.coerce.number().min(1, 'Тривалість має бути не менше 1 секунди.'),
@@ -41,10 +43,12 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
         duration: slide.duration || 10,
         textType: slide.textType || 'normal',
         textAlign: slide.textAlign || 'center',
+        fontSize: slide.fontSize || 48,
     } : {
       type: 'text',
       textType: 'normal',
       textAlign: 'center',
+      fontSize: 48,
       title: '',
       content: '',
       duration: 10,
@@ -54,12 +58,14 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const watchType = form.watch('type');
+  const watchFontSize = form.watch('fontSize');
 
   function onSubmit(data: ContentFormValues) {
     const finalData = {
         ...data,
         textType: data.type === 'text' ? data.textType : undefined,
         textAlign: data.type === 'text' ? data.textAlign : undefined,
+        fontSize: data.type === 'text' ? data.fontSize : undefined,
     }
     onSave(finalData);
   }
@@ -126,6 +132,7 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
         </div>
         
         {watchType === 'text' && (
+            <>
             <div className="grid grid-cols-2 gap-4">
                  <FormField
                     control={form.control}
@@ -171,6 +178,26 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
                     )}
                 />
             </div>
+             <FormField
+                control={form.control}
+                name="fontSize"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Розмір шрифту - {watchFontSize}px</FormLabel>
+                        <FormControl>
+                            <Slider
+                                value={[field.value || 48]}
+                                onValueChange={(value) => field.onChange(value[0])}
+                                min={16}
+                                max={128}
+                                step={1}
+                             />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            </>
         )}
 
 

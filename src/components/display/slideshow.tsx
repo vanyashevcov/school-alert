@@ -141,6 +141,8 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
       const config = textSlideConfig[slide.textType || 'normal'];
       const Icon = config.icon;
       const textAlign = slide.textAlign || 'center';
+      const fontSize = slide.fontSize || 48; // Default to 48px if not set
+
       return (
         <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8", config.backgroundClass)}>
             <Card className={cn("max-w-5xl w-full max-h-[90vh] flex flex-col border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass, `text-${textAlign}`)}>
@@ -151,10 +153,13 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
                 </div>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto p-6">
-                <p 
-                    className="text-3xl md:text-5xl font-medium leading-tight text-balance whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: slide.content }}
-                ></p>
+                 <div className="flex items-center justify-center h-full">
+                    <p 
+                        className="font-medium leading-tight text-balance whitespace-pre-wrap"
+                        style={{ fontSize: `${fontSize}px` }}
+                        dangerouslySetInnerHTML={{ __html: slide.content }}
+                    ></p>
+                 </div>
               </CardContent>
             </Card>
         </div>
