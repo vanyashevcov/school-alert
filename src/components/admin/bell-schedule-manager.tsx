@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { LessonTime, DayOfWeek } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,9 +65,10 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
   
   useEffect(() => {
     const scheduleCollectionRef = collection(db, 'lessonSchedule');
-    const q = query(scheduleCollectionRef, where('day', '==', day), orderBy('startTime', 'asc'));
+    const q = query(scheduleCollectionRef, where('day', '==', day));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as LessonTime[];
+        scheduleData.sort((a, b) => a.startTime.localeCompare(b.startTime));
         setSchedule(scheduleData);
     });
     return () => unsubscribe();

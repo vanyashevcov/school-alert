@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import * as Tone from 'tone';
 import { useInterval } from '@/hooks/use-interval';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { LessonTime, DayOfWeek } from '@/lib/types';
 import { format, getDay } from 'date-fns';
@@ -17,10 +17,11 @@ export default function BellSystem() {
 
   useEffect(() => {
     const today = dayMapping[getDay(new Date())];
-    const q = query(collection(db, 'lessonSchedule'), where('day', '==', today), orderBy('startTime', 'asc'));
+    const q = query(collection(db, 'lessonSchedule'), where('day', '==', today));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as LessonTime[];
+        scheduleData.sort((a, b) => a.startTime.localeCompare(b.startTime));
         setSchedule(scheduleData);
     });
 
