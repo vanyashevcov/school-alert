@@ -10,8 +10,12 @@ export type SlideContent = {
   createdAt?: Timestamp; 
 };
 
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
 export type BellTime = {
   id: string;
   time: string; // "HH:mm"
   label: string;
+  day: DayOfWeek;
 };
+
