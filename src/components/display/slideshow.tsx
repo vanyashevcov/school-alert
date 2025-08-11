@@ -18,7 +18,7 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
           src={slide.content}
           alt={slide.title || 'Зображення для слайду'}
           fill
-          className="object-cover"
+          className="object-contain"
           data-ai-hint="school life"
         />
       );
@@ -107,7 +107,7 @@ export default function Slideshow() {
       <CarouselContent>
         {slides.map((slide, index) => (
           <CarouselItem key={slide.id}>
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full bg-black">
                 <Slide slide={slide} isActive={index === currentSlide} />
             </div>
           </CarouselItem>
