@@ -32,7 +32,7 @@ export default function BellSystem() {
   useEffect(() => {
     // Initialize the player only on the client side
     bellPlayer.current = new Tone.Player({
-        url: "https://zvukitop.com/wp-content/uploads/2021/03/zvuk-shkolnogo-zvonka-ygbb.mp3?_=7",
+        url: "https://zvukitop.com/wp-content/uploads/2021/03/zvuk-shkolnogo-zvonka-ygbb.mp3",
         autostart: false,
     }).toDestination();
     
