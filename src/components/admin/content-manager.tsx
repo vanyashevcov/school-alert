@@ -85,7 +85,7 @@ export default function ContentManager() {
                         <PlusCircle className="mr-2 h-4 w-4" /> Додати слайд
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[625px]">
+                <DialogContent className="sm:max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>{editingSlide ? 'Редагувати' : 'Додати'} слайд</DialogTitle>
                     </DialogHeader>
