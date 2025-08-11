@@ -23,7 +23,7 @@ export default function NewsTicker() {
     return null; // Don't render anything if there's no news
   }
 
-  const allNewsText = news.map(item => item.text).join(' * ');
+  const allNewsText = news.map(item => item.text).join('   *   ');
 
   return (
     <div className="bg-primary text-primary-foreground h-full flex items-center overflow-hidden">
