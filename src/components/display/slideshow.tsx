@@ -37,7 +37,7 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
         <div className="flex items-center justify-center h-full bg-primary/90 backdrop-blur-sm p-8">
             <Card className="max-w-4xl text-center bg-background/80 border-2 border-accent shadow-2xl">
               <CardHeader>
-                <CardTitle className="text-7xl font-bold text-primary">{slide.title}</CardTitle>
+                <CardTitle className="text-5xl font-bold text-primary">{slide.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-4xl text-foreground/80">{slide.content}</p>
@@ -104,7 +104,7 @@ export default function Slideshow() {
 
   return (
     <Carousel setApi={setApi} className="w-full h-full" opts={{ loop: true }}>
-      <CarouselContent>
+      <CarouselContent className="h-full">
         {slides.map((slide, index) => (
           <CarouselItem key={slide.id}>
             <div className="relative w-full h-full bg-black">
