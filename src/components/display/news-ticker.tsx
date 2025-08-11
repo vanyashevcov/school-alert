@@ -31,7 +31,7 @@ export default function NewsTicker() {
         <Newspaper />
         <span className="font-bold">НОВИНИ:</span>
       </div>
-      <div className="flex-1 relative h-full flex items-center">
+      <div className="flex-1 relative h-full flex items-center overflow-hidden">
         <p 
           className="text-2xl font-semibold absolute whitespace-nowrap animate-marquee"
           style={{
