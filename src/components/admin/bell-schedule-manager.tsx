@@ -111,9 +111,12 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
   }
 
   return (
-    <>
-        <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">{label}</h3>
+    <Card>
+        <CardHeader className="flex flex-row justify-between items-center">
+            <div>
+                <CardTitle>{label}</CardTitle>
+                <CardDescription>Розклад для цього дня.</CardDescription>
+            </div>
              <Dialog open={isFormOpen} onOpenChange={(isOpen) => {
                 setIsFormOpen(isOpen);
                 if (!isOpen) setEditingTime(null);
@@ -138,35 +141,37 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                     />
                 </DialogContent>
             </Dialog>
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Урок №</TableHead>
-              <TableHead>Початок</TableHead>
-              <TableHead>Кінець</TableHead>
-              <TableHead className="text-right">Дії</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {schedule.length > 0 ? schedule.map(item => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.lessonNumber}</TableCell>
-                <TableCell className="font-mono">{item.startTime}</TableCell>
-                <TableCell className="font-mono">{item.endTime}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>Видалити</Button>
-                </TableCell>
-              </TableRow>
-            )) : (
+        </CardHeader>
+        <CardContent>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                    <TableCell colSpan={4} className="text-center h-24">Розклад для цього дня порожній.</TableCell>
+                  <TableHead>Урок №</TableHead>
+                  <TableHead>Початок</TableHead>
+                  <TableHead>Кінець</TableHead>
+                  <TableHead className="text-right">Дії</TableHead>
                 </TableRow>
-            )}
-          </TableBody>
-        </Table>
-    </>
+              </TableHeader>
+              <TableBody>
+                {schedule.length > 0 ? schedule.map(item => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.lessonNumber}</TableCell>
+                    <TableCell className="font-mono">{item.startTime}</TableCell>
+                    <TableCell className="font-mono">{item.endTime}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>Видалити</Button>
+                    </TableCell>
+                  </TableRow>
+                )) : (
+                    <TableRow>
+                        <TableCell colSpan={4} className="text-center h-24">Розклад для цього дня порожній.</TableCell>
+                    </TableRow>
+                )}
+              </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
   )
 }
 
@@ -174,25 +179,23 @@ export default function BellScheduleManager() {
   const [activeTab, setActiveTab] = useState<DayOfWeek>('monday');
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Розклад дзвінків</CardTitle>
-        <CardDescription>Керуйте часом початку та кінця уроків для кожного дня тижня.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DayOfWeek)} className="space-y-4">
+    <div>
+        <div className="space-y-1 mb-4">
+            <h2 className="text-2xl font-bold tracking-tight">Розклад дзвінків</h2>
+            <p className="text-muted-foreground">Керуйте часом початку та кінця уроків для кожного дня тижня.</p>
+        </div>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DayOfWeek)} className="w-full">
             <TabsList>
                 {daysOfWeek.map(({ value, label }) => (
                     <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
                 ))}
             </TabsList>
             {daysOfWeek.map(({ value, label }) => (
-                <TabsContent key={value} value={value} className="space-y-4">
+                <TabsContent key={value} value={value} className="space-y-4 mt-4">
                     <DailySchedule day={value} label={label} />
                 </TabsContent>
             ))}
         </Tabs>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
