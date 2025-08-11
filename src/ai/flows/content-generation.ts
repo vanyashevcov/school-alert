@@ -33,7 +33,7 @@ const generateSchoolContentPrompt = ai.definePrompt({
   name: 'generateSchoolContentPrompt',
   input: {schema: GenerateSchoolContentInputSchema},
   output: {schema: GenerateSchoolContentOutputSchema},
-  prompt: `You are a helpful assistant for generating engaging content for a school display.  Please generate content based on the following prompt: {{{prompt}}}`,
+  prompt: `You are a helpful assistant for generating engaging content for a school display. Please generate content based on the following prompt: {{{prompt}}}. The response must be in Ukrainian.`,
 });
 
 const generateSchoolContentFlow = ai.defineFlow(
