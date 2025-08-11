@@ -6,21 +6,21 @@ import * as Tone from 'tone';
 import { useInterval } from '@/hooks/use-interval';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { BellTime, DayOfWeek } from '@/lib/types';
+import type { LessonTime, DayOfWeek } from '@/lib/types';
 import { format } from 'date-fns';
 
 const dayMapping: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 export default function BellSystem() {
-  const [schedule, setSchedule] = useState<BellTime[]>([]);
+  const [schedule, setSchedule] = useState<LessonTime[]>([]);
   const [lastPlayed, setLastPlayed] = useState<string | null>(null);
 
   useEffect(() => {
     const today = dayMapping[new Date().getDay()];
-    const q = query(collection(db, 'bellSchedule'), where('day', '==', today), orderBy('time', 'asc'));
+    const q = query(collection(db, 'lessonSchedule'), where('day', '==', today), orderBy('startTime', 'asc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as BellTime[];
+        const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as LessonTime[];
         setSchedule(scheduleData);
     });
 
@@ -43,14 +43,25 @@ export default function BellSystem() {
     const now = new Date();
     const currentTime = format(now, 'HH:mm');
 
-    const shouldPlay = schedule.find(item => item.time === currentTime);
+    const shouldPlay = schedule.find(item => item.startTime === currentTime || item.endTime === currentTime);
 
     if (shouldPlay && lastPlayed !== currentTime) {
-      console.log(`Playing bell for ${shouldPlay.label} at ${shouldPlay.time}`);
+      const isStart = shouldPlay.startTime === currentTime;
+      const label = isStart ? `Початок уроку ${shouldPlay.lessonNumber}` : `Кінець уроку ${shouldPlay.lessonNumber}`;
+      console.log(`Playing bell for ${label} at ${currentTime}`);
+      
       Tone.start();
       const synth = new Tone.Synth().toDestination();
-      synth.triggerAttackRelease('C5', '8n', Tone.now());
-      synth.triggerAttackRelease('G5', '8n', Tone.now() + 0.2);
+      
+      if (isStart) {
+        // A simple two-tone melody for the start
+        synth.triggerAttackRelease('C5', '8n', Tone.now());
+        synth.triggerAttackRelease('G5', '8n', Tone.now() + 0.2);
+      } else {
+        // A single, slightly longer tone for the end
+        synth.triggerAttackRelease('G5', '4n', Tone.now());
+      }
+
       setLastPlayed(currentTime);
     }
   }, 1000); // Check every second to be precise

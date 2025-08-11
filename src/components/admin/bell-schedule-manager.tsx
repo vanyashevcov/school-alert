@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { BellTime, DayOfWeek } from '@/lib/types';
+import type { LessonTime, DayOfWeek } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -23,24 +23,31 @@ const daysOfWeek: { value: DayOfWeek, label: string }[] = [
     { value: 'friday', label: 'П\'ятниця' },
 ];
 
-function ScheduleForm({ onSave, onCancel, bellTime, day }: { onSave: (data: Omit<BellTime, 'id'>) => void, onCancel: () => void, bellTime: BellTime | null, day: DayOfWeek }) {
-    const [time, setTime] = useState(bellTime?.time || '08:00');
-    const [label, setLabel] = useState(bellTime?.label || '');
+function ScheduleForm({ onSave, onCancel, lessonTime, day }: { onSave: (data: Omit<LessonTime, 'id'>) => void, onCancel: () => void, lessonTime: LessonTime | null, day: DayOfWeek }) {
+    const [lessonNumber, setLessonNumber] = useState(lessonTime?.lessonNumber || '1');
+    const [startTime, setStartTime] = useState(lessonTime?.startTime || '08:00');
+    const [endTime, setEndTime] = useState(lessonTime?.endTime || '08:45');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ time, label, day });
+        onSave({ lessonNumber, startTime, endTime, day });
     }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="time">Час</Label>
-                <Input id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
+                <Label htmlFor="lessonNumber">Номер уроку</Label>
+                <Input id="lessonNumber" value={lessonNumber} onChange={(e) => setLessonNumber(e.target.value)} placeholder="Наприклад, '1' або 'Перерва'" required />
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="label">Призначення</Label>
-                <Input id="label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Наприклад, 'Початок уроку'" required />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="startTime">Час початку</Label>
+                    <Input id="startTime" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="endTime">Час закінчення</Label>
+                    <Input id="endTime" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
+                </div>
             </div>
             <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="ghost" onClick={onCancel}>Скасувати</Button>
@@ -51,29 +58,29 @@ function ScheduleForm({ onSave, onCancel, bellTime, day }: { onSave: (data: Omit
 }
 
 function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
-  const [schedule, setSchedule] = useState<BellTime[]>([]);
+  const [schedule, setSchedule] = useState<LessonTime[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTime, setEditingTime] = useState<BellTime | null>(null);
+  const [editingTime, setEditingTime] = useState<LessonTime | null>(null);
   const { toast } = useToast();
-  const scheduleCollectionRef = collection(db, 'bellSchedule');
+  const scheduleCollectionRef = collection(db, 'lessonSchedule');
 
   useEffect(() => {
-    const q = query(scheduleCollectionRef, where('day', '==', day), orderBy('time', 'asc'));
+    const q = query(scheduleCollectionRef, where('day', '==', day), orderBy('startTime', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as BellTime[];
+        const scheduleData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as LessonTime[];
         setSchedule(scheduleData);
     });
     return () => unsubscribe();
   }, [day]);
 
-   const handleSave = async (bellTimeData: Omit<BellTime, 'id'>) => {
+   const handleSave = async (lessonTimeData: Omit<LessonTime, 'id'>) => {
     try {
         if (editingTime) {
-            const timeDoc = doc(db, 'bellSchedule', editingTime.id);
-            await updateDoc(timeDoc, bellTimeData);
+            const timeDoc = doc(db, 'lessonSchedule', editingTime.id);
+            await updateDoc(timeDoc, lessonTimeData);
             toast({ title: 'Час оновлено!'});
         } else {
-            await addDoc(scheduleCollectionRef, bellTimeData);
+            await addDoc(scheduleCollectionRef, lessonTimeData);
             toast({ title: 'Час додано!'});
         }
         setEditingTime(null);
@@ -84,20 +91,20 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
     }
   };
 
-  const handleEdit = (bellTime: BellTime) => {
-    setEditingTime(bellTime);
+  const handleEdit = (lessonTime: LessonTime) => {
+    setEditingTime(lessonTime);
     setIsFormOpen(true);
   };
   
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Ви впевнені, що хочете видалити цей час?")) return;
+    if (!window.confirm("Ви впевнені, що хочете видалити цей урок?")) return;
     try {
-        const timeDoc = doc(db, 'bellSchedule', id);
+        const timeDoc = doc(db, 'lessonSchedule', id);
         await deleteDoc(timeDoc);
-        toast({ title: 'Час видалено.'});
+        toast({ title: 'Урок видалено.'});
     } catch (error) {
         console.error("Error deleting time: ", error);
-        toast({ variant: 'destructive', title: 'Помилка', description: 'Не вдалося видалити час.'});
+        toast({ variant: 'destructive', title: 'Помилка', description: 'Не вдалося видалити урок.'});
     }
   }
 
@@ -111,15 +118,15 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
              }}>
                 <DialogTrigger asChild>
                     <Button onClick={() => setEditingTime(null)}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Додати час
+                        <PlusCircle className="mr-2 h-4 w-4" /> Додати урок
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>{editingTime ? 'Редагувати' : 'Додати'} час для: {label}</DialogTitle>
+                        <DialogTitle>{editingTime ? 'Редагувати' : 'Додати'} урок для: {label}</DialogTitle>
                     </DialogHeader>
                     <ScheduleForm
-                        bellTime={editingTime}
+                        lessonTime={editingTime}
                         day={day}
                         onSave={handleSave}
                         onCancel={() => {
@@ -133,16 +140,18 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Час</TableHead>
-              <TableHead>Призначення</TableHead>
+              <TableHead>Урок №</TableHead>
+              <TableHead>Початок</TableHead>
+              <TableHead>Кінець</TableHead>
               <TableHead className="text-right">Дії</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {schedule.length > 0 ? schedule.map(item => (
               <TableRow key={item.id}>
-                <TableCell className="font-mono">{item.time}</TableCell>
-                <TableCell>{item.label}</TableCell>
+                <TableCell className="font-medium">{item.lessonNumber}</TableCell>
+                <TableCell className="font-mono">{item.startTime}</TableCell>
+                <TableCell className="font-mono">{item.endTime}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>Видалити</Button>
@@ -150,7 +159,7 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
               </TableRow>
             )) : (
                 <TableRow>
-                    <TableCell colSpan={3} className="text-center h-24">Розклад для цього дня порожній.</TableCell>
+                    <TableCell colSpan={4} className="text-center h-24">Розклад для цього дня порожній.</TableCell>
                 </TableRow>
             )}
           </TableBody>

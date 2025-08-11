@@ -12,10 +12,10 @@ export type SlideContent = {
 
 export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
-export type BellTime = {
+export type LessonTime = {
   id: string;
-  time: string; // "HH:mm"
-  label: string;
+  lessonNumber: string;
+  startTime: string; // "HH:mm"
+  endTime: string; // "HH:mm"
   day: DayOfWeek;
 };
-
