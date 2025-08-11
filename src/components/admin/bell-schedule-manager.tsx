@@ -118,8 +118,8 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                 <CardDescription>Розклад для цього дня.</CardDescription>
             </div>
              <Dialog open={isFormOpen} onOpenChange={(isOpen) => {
-                setIsFormOpen(isOpen);
                 if (!isOpen) setEditingTime(null);
+                setIsFormOpen(isOpen);
              }}>
                 <DialogTrigger asChild>
                     <Button onClick={() => setEditingTime(null)}>

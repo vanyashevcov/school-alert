@@ -97,8 +97,8 @@ export default function NewsTickerManager() {
                 <CardDescription>Керуйте новинами, що відображаються у біжучому рядку.</CardDescription>
             </div>
              <Dialog open={isFormOpen} onOpenChange={(isOpen) => {
-                setIsFormOpen(isOpen);
                 if (!isOpen) setEditingNews(null);
+                setIsFormOpen(isOpen);
              }}>
                 <DialogTrigger asChild>
                     <Button onClick={() => setEditingNews(null)}>
