@@ -28,7 +28,7 @@ function Slide({ slide, isActive }: { slide: SlideContent; isActive: boolean }) 
       return (
         <iframe
           key={isActive ? slide.id : undefined}
-          src={`https://www.youtube.com/embed/${slide.content}?autoplay=1&mute=1&controls=0&loop=1&playlist=${slide.content}&enablejsapi=1`}
+          src={`https://www.youtube.com/embed/${slide.content}?autoplay=1&controls=0&loop=1&playlist=${slide.content}&enablejsapi=1`}
           title={slide.title || 'YouTube video player'}
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
