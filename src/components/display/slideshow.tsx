@@ -10,6 +10,7 @@ import { db } from '@/lib/firebase';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
 import { Megaphone, AlertTriangle, Siren, Info } from 'lucide-react';
+import { ScrollArea } from '../ui/scroll-area';
 
 // Augment the window object
 declare global {
@@ -142,18 +143,20 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
       const textAlign = slide.textAlign || 'center';
       return (
         <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8", config.backgroundClass)}>
-            <Card className={cn("max-w-5xl w-full border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass, `text-${textAlign}`)}>
+            <Card className={cn("max-w-5xl w-full max-h-[90vh] flex flex-col border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass, `text-${textAlign}`)}>
               <CardHeader>
                  <div className="flex flex-col justify-center items-center gap-4">
-                    <Icon className={cn("h-24 w-24 drop-shadow-lg", config.iconClass)} />
-                    {slide.title && <CardTitle className={cn("text-6xl font-bold drop-shadow-sm", config.titleClass)}>{slide.title}</CardTitle>}
+                    <Icon className={cn("h-16 md:h-24 w-16 md:w-24 drop-shadow-lg", config.iconClass)} />
+                    {slide.title && <CardTitle className={cn("text-4xl md:text-6xl font-bold drop-shadow-sm", config.titleClass)}>{slide.title}</CardTitle>}
                 </div>
               </CardHeader>
-              <CardContent>
-                <p 
-                    className="text-5xl font-medium leading-tight text-balance whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: slide.content }}
-                ></p>
+              <CardContent className="flex-1 overflow-y-auto">
+                <ScrollArea className="h-full pr-6">
+                    <p 
+                        className="text-3xl md:text-5xl font-medium leading-tight text-balance whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{ __html: slide.content }}
+                    ></p>
+                </ScrollArea>
               </CardContent>
             </Card>
         </div>
