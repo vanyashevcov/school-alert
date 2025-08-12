@@ -27,7 +27,11 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
     useEffect(() => {
         if (!isActive) {
             if (playerRef.current) {
-                playerRef.current.destroy();
+                try {
+                    playerRef.current.destroy();
+                } catch (e) {
+                    console.error("Error destroying player", e);
+                }
                 playerRef.current = null;
             }
             return;
@@ -35,7 +39,11 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
 
         const createPlayer = () => {
             if (playerRef.current) {
-                 playerRef.current.destroy();
+                 try {
+                    playerRef.current.destroy();
+                } catch (e) {
+                    console.error("Error destroying player", e);
+                }
             }
             playerRef.current = new window.YT.Player(playerContainerId, {
                 videoId: videoId,
@@ -44,12 +52,14 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
                     controls: 0,
                     loop: 0, 
                     modestbranding: 1,
-                    rel: 0
+                    rel: 0,
+                    playsinline: 1
                 },
                 events: {
-                    'onReady': () => {
+                    'onReady': (event: any) => {
                         onReady();
-                        playerRef.current?.playVideo();
+                        event.target.playVideo();
+                        event.target.mute(); // Mute for autoplay policies
                     },
                     'onStateChange': (event: any) => {
                         if (event.data === window.YT.PlayerState.ENDED) {
@@ -60,27 +70,28 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
             });
         }
 
-        if (!window.YT) {
-            // If YT API is not ready, wait for it
-            const interval = setInterval(() => {
-                if (window.YT && window.YT.Player) {
-                    clearInterval(interval);
-                    createPlayer();
-                }
-            }, 100);
+        if (window.YT && window.YT.Player) {
+            createPlayer();
         } else {
-             createPlayer();
+             window.onYouTubeIframeAPIReady = () => {
+                createPlayer();
+            };
         }
 
         return () => {
              if (playerRef.current) {
-                playerRef.current.destroy();
+                try {
+                    playerRef.current.destroy();
+                } catch (e) {
+                    console.error("Error destroying player", e)
+                }
                 playerRef.current = null;
             }
         };
 
     }, [isActive, videoId, onEnd, onReady, playerContainerId]);
-
+    
+    // Using iframe directly with src params for autoplay, as YT.Player can be tricky with frameworks
     return <div id={playerContainerId} className="w-full h-full"></div>;
 }
 
@@ -192,13 +203,17 @@ function AlertSlide({title, message, icon: Icon, configKey = 'urgent'}: {title: 
 export default function Slideshow({ isAlertActive, fireAlert, airRaidAlert }: { isAlertActive: boolean; fireAlert: EmergencyAlert | null; airRaidAlert: AirRaidAlertOutput | null }) {
   const [slides, setSlides] = useState<SlideContent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isApiReady, setIsApiReady] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    window.onYouTubeIframeAPIReady = () => {
-      setIsApiReady(true);
-    };
+    // If onYouTubeIframeAPIReady is not on window, set it.
+    if (typeof window !== 'undefined' && !window.onYouTubeIframeAPIReady) {
+      window.onYouTubeIframeAPIReady = () => {
+        // This function can be called by multiple players,
+        // so we just need to signal that the API is ready.
+        // The players themselves will be created in their useEffect.
+      };
+    }
   }, []);
 
 
@@ -224,7 +239,7 @@ export default function Slideshow({ isAlertActive, fireAlert, airRaidAlert }: { 
     const currentSlideData = slides[currentSlide];
     if (!currentSlideData || currentSlideData.type === 'video') return;
 
-    timeoutRef.current = setTimeout(handleNext, currentSlideData.duration * 1000);
+    timeoutRef.current = setTimeout(handleNext, (currentSlideData.duration || 10) * 1000);
   }
 
   useEffect(() => {
