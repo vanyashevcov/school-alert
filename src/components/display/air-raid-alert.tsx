@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import * as Tone from 'tone';
-import { Siren } from 'lucide-react';
+import { Siren, ShieldCheck } from 'lucide-react';
 import { useInterval } from '@/hooks/use-interval';
 import { analyzeAirRaidAlert, type AirRaidAlertOutput } from '@/ai/flows/air-raid-alert-reasoning';
 import { cn } from '@/lib/utils';
@@ -82,22 +82,32 @@ export default function AirRaidAlert() {
     setLastAlertStatus(alertState?.shouldAlert ?? null);
   }, [alertState, lastAlertStatus]);
 
-  if (!alertState || !alertState.shouldAlert) {
-    return null;
+  if (!alertState) {
+    return null; // Don't render anything until check is complete
   }
 
   return (
     <div
       className={cn(
-        'absolute top-0 left-0 right-0 z-50 flex items-center justify-center gap-4 bg-red-600 p-4 text-white shadow-lg animate-pulse'
+        'p-4 rounded-lg flex items-center gap-3 transition-all duration-500',
+        alertState.shouldAlert
+          ? 'bg-red-600/90 text-white animate-pulse'
+          : 'bg-black/20 text-white'
       )}
     >
-      <Siren className="h-10 w-10" />
-      <div className="text-center">
-        <h2 className="text-3xl font-bold">ПОВІТРЯНА ТРИВОГА</h2>
-        <p className="text-lg">{alertState.reason}</p>
+      {alertState.shouldAlert ? (
+        <Siren className="h-8 w-8" />
+      ) : (
+        <ShieldCheck className="h-8 w-8 text-green-400" />
+      )}
+      <div className="text-right">
+        <h2 className="text-xl font-bold">
+            {alertState.shouldAlert ? 'Повітряна тривога' : 'Безпечно'}
+        </h2>
+        <p className="text-sm opacity-90">
+            {alertState.shouldAlert ? alertState.reason : 'м. Полтава'}
+        </p>
       </div>
-      <Siren className="h-10 w-10" />
     </div>
   );
 }

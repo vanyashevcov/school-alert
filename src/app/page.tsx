@@ -9,10 +9,12 @@ export default function Home() {
   return (
     <div className="relative flex h-full w-full flex-col">
       <AudioEnabler />
-      <AirRaidAlert />
       <BellSystem />
-      <header className="absolute top-4 left-4 z-10 bg-black/20 p-4 rounded-lg">
-        <TimeAndDate />
+      <header className="absolute top-4 left-4 right-4 z-10 flex items-start justify-between">
+        <div className="bg-black/20 p-4 rounded-lg">
+          <TimeAndDate />
+        </div>
+        <AirRaidAlert />
       </header>
       <main className="flex-1">
         <Slideshow />
