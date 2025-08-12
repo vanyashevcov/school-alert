@@ -27,6 +27,14 @@ async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
       });
     } else {
       // No active alert for Poltava city
+      const poltavaOblastAlert = alerts.find(alert => alert.location_title.includes('Полтавська область'));
+      if (poltavaOblastAlert) {
+           return analyzeAirRaidAlert({
+                city: poltavaOblastAlert.location_title,
+                alertStatus: true,
+                alertMessage: `Повітряна тривога в ${poltavaOblastAlert.location_title}`,
+            });
+      }
       return { shouldAlert: false, reason: 'Відбій тривоги або відсутність загрози для Полтави.' };
     }
   } catch (error) {

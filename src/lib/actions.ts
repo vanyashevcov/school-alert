@@ -62,13 +62,14 @@ type AirRaidAlert = {
 export async function getAirRaidAlerts(): Promise<AirRaidAlert[]> {
     const apiKey = process.env.ALERTS_IN_UA_API_KEY;
     if (!apiKey) {
-        console.error("ALERTS_IN_UA_API_KEY is not set in .env.local");
+        console.error("ALERTS_IN_UA_API_KEY is not set in .env");
         return [];
     }
 
     try {
         const response = await fetch('https://alerts.in.ua/v1/alerts/active.json', {
             headers: {
+                // @ts-ignore
                 'X-API-Key': apiKey,
             },
         });

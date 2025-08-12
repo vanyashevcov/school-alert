@@ -13,7 +13,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AirRaidAlertInputSchema = z.object({
-  city: z.string().describe('The city associated with the alert.'),
+  city: z.string().describe('The city or region associated with the alert.'),
   alertStatus: z.boolean().describe('The current status of the air raid alert (true = active, false = inactive).'),
   alertMessage: z.string().optional().describe('The alert message from the API.'),
 });
@@ -33,27 +33,26 @@ const prompt = ai.definePrompt({
   name: 'airRaidAlertPrompt',
   input: {schema: AirRaidAlertInputSchema},
   output: {schema: AirRaidAlertOutputSchema},
-  prompt: `You are an AI assistant that determines if an air raid alert from the alerts.in.ua API warrants displaying a warning in a school in Ukraine.
+  prompt: `You are an AI assistant that determines if an air raid alert from the alerts.in.ua API warrants displaying a warning in a school in Poltava, Ukraine.
 
-You will receive the city the alert is for, the alert status (true if active, false if inactive), and the alert message.
+You will receive the location (city or region), the alert status (true if active, false if inactive), and the alert message.
 
-Your task is to determine if the alert is relevant to Poltava. Only display a warning if the alert is for Poltava.
+Your task is to determine if the alert is relevant to the city of Poltava. A warning should be displayed if the alert is active for either "Полтава" (the city) or "Полтавська область" (the region).
 
 Return a JSON object with the following format:
 {
-  "shouldAlert": true or false, // true if the alert is relevant to Poltava, false otherwise
-  "reason": "The reason for the decision. Be concise."
+  "shouldAlert": true or false,
+  "reason": "The reason for the decision. Be concise. For example: 'Тривога у м. Полтава' or 'Тривога у Полтавській області'."
 }
 
 Here is the alert information:
-City: {{{city}}}
+Location: {{{city}}}
 Alert Status: {{{alertStatus}}}
 Alert Message: {{{alertMessage}}}
 
 Consider the following:
-- Only alerts for Poltava are relevant.
+- Alerts for "Полтава" or "Полтавська область" are relevant.
 - If the alert status is false, it means the alert is over, so shouldAlert should be false.
-- Ignore alerts for regions, only city-specific alerts are relevant.
 `,
 });
 
