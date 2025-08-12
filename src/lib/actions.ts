@@ -3,7 +3,6 @@
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import https from 'https';
 
 const loginSchema = z.object({
   email: z.string().email("Невірний формат електронної пошти"),
@@ -42,56 +41,41 @@ export async function logout() {
 }
 
 export async function getPoltavaAlertStatus(): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const apiKey = process.env.ALERTS_IN_UA_API_KEY;
-        // UID for Poltava city
+    return new Promise((resolve) => {
+        const apiKey = "e887858b239034e45ea7f086c08c54a87506c0b1ab2203"; // Прямо в коді для тесту
         const poltavaUID = 1060;
 
-        if (!apiKey) {
-            console.error("ALERTS_IN_UA_API_KEY is not set in .env");
-            resolve("N"); // Default to safe status if no key
-            return;
-        }
-
+        const https = require("https");
         const url = `https://api.alerts.in.ua/v1/iot/active_air_raid_alerts.json?token=${apiKey}`;
 
-        const req = https.get(url, (res) => {
-            let data = '';
+        https.get(url, (res: any) => {
+            let data = "";
 
-            res.on('data', (chunk) => {
-                data += chunk;
+            res.on("data", (chunk: Buffer) => {
+                data += chunk.toString();
             });
 
-            res.on('end', () => {
+            res.on("end", () => {
                 if (res.statusCode === 200) {
-                    try {
-                        const jsonResponse = JSON.parse(data);
-                        const statusesString = jsonResponse.states;
+                    // Тут "data" — це вже чистий рядок з N/A/P
+                    const statusesString = data.trim();
 
-                        if (statusesString && statusesString.length > poltavaUID) {
-                            const status = statusesString.charAt(poltavaUID);
-                            // Return 'N' for space or any other unexpected character
-                            resolve(['A', 'P'].includes(status) ? status : 'N');
-                        } else {
-                            console.error(`Statuses string is too short or missing. Length: ${statusesString?.length}, UID: ${poltavaUID}`);
-                            resolve("N");
-                        }
-                    } catch (e: any) {
-                        console.error('Error parsing JSON response from alerts API:', e.message);
+                    if (statusesString.length > poltavaUID) {
+                        const status = statusesString.charAt(poltavaUID);
+                        // Якщо символ не A або P — вважаємо, що тривоги немає
+                        resolve(["A", "P"].includes(status) ? status : "N");
+                    } else {
+                        console.error(`Строка занадто коротка. Довжина: ${statusesString.length}, UID: ${poltavaUID}`);
                         resolve("N");
                     }
                 } else {
-                    console.error(`API call failed with status: ${res.statusCode}`, data);
+                    console.error(`Помилка API: ${res.statusCode} - ${data}`);
                     resolve("N");
                 }
             });
-        });
-
-        req.on('error', (error) => {
-            console.error('Failed to fetch air raid status with https module:', error);
+        }).on("error", (err: Error) => {
+            console.error("Помилка запиту:", err.message);
             resolve("N");
         });
-
-        req.end();
     });
 }
