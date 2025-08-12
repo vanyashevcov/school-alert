@@ -34,6 +34,7 @@ export default function Home() {
     airRaidPlayer.current = new Tone.Player({
       url: "/Air-raid-siren.mp3",
       loop: true,
+      autostart: false,
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
