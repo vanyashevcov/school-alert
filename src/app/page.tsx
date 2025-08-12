@@ -26,20 +26,25 @@ async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
     );
     const poltavaOblastAlert = alerts.find(alert => alert.location_title === 'Полтавська область');
 
+    let relevantAlert = null;
     if (poltavaCityAlert) {
-      return analyzeAirRaidAlert({
-        city: poltavaCityAlert.location_title,
-        alertStatus: true,
-        alertMessage: `Повітряна тривога в ${poltavaCityAlert.location_title}`,
-      });
+      relevantAlert = poltavaCityAlert;
     } else if (poltavaOblastAlert) {
-        return analyzeAirRaidAlert({
-            city: poltavaOblastAlert.location_title,
-            alertStatus: true,
-            alertMessage: `Повітряна тривога в ${poltavaOblastAlert.location_title}`,
-        });
+      relevantAlert = poltavaOblastAlert;
+    }
+
+    if (relevantAlert) {
+      return analyzeAirRaidAlert({
+        city: relevantAlert.location_title,
+        alertStatus: true,
+        alertMessage: `Повітряна тривога в ${relevantAlert.location_title}`,
+      });
     } else {
-      return { shouldAlert: false, reason: 'Відбій тривоги або відсутність загрози для Полтави.' };
+      return analyzeAirRaidAlert({
+        city: 'м. Полтава',
+        alertStatus: false,
+        alertMessage: 'Відбій тривоги',
+      });
     }
   } catch (error) {
     console.error('Error fetching air raid status:', error);
@@ -110,8 +115,9 @@ export default function Home() {
   useEffect(() => {
     const playSound = async (player: Tone.Player | null) => {
       if (Tone.context.state !== 'running' || !player) return;
-      if (player.loaded) {
-          player.start();
+      if (player.state !== 'started') {
+        await Tone.loaded();
+        player.start();
       }
     }
     
@@ -121,7 +127,7 @@ export default function Home() {
     } else {
         fireAlarmPlayer.current?.stop();
         if (alertState?.shouldAlert) {
-            if (!lastAlertStatus) { // Air raid alert just became active
+            if (lastAlertStatus === false) { // Air raid alert just became active
                 playSound(sirenPlayer.current);
             }
         } else {
