@@ -33,7 +33,7 @@ export default function Home() {
    useEffect(() => {
     airRaidPlayer.current = new Tone.Player({
       url: "/Air-raid-siren.mp3",
-      loop: true,
+      loop: false,
       autostart: false,
     }).toDestination();
     
