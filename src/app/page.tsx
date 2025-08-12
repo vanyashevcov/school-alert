@@ -20,23 +20,21 @@ export interface AirRaidAlertOutput {
   reason: string;
 }
 
+// Poltava Oblast regionId from Ukraine Alarm API
+const POLTAVA_REGION_ID = '14'; 
+
 async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
   try {
     const alerts = await getAirRaidAlerts();
-    const poltavaCityAlert = alerts.find(alert => alert.location_title === 'м. Полтава');
-    const poltavaOblastAlert = alerts.find(alert => alert.location_title === 'Полтавська область');
+    const poltavaOblastAlert = alerts.find(alert => alert.regionId === POLTAVA_REGION_ID);
 
-    let relevantAlert: AirRaidAlertType | undefined;
-    if (poltavaCityAlert) {
-      relevantAlert = poltavaCityAlert;
-    } else if (poltavaOblastAlert) {
-      relevantAlert = poltavaOblastAlert;
-    }
-
-    if (relevantAlert) {
+    if (poltavaOblastAlert && poltavaOblastAlert.activeAlerts.length > 0) {
+      // Assuming the first active alert is the most relevant one for the reason.
+      // The API provides different alert types, we can specify if needed.
+      // For now, any active alert in the region triggers the alarm.
       return {
         shouldAlert: true,
-        reason: `Тривога у ${relevantAlert.location_title}`,
+        reason: `Тривога у Полтавській області`,
       };
     } else {
       return {
@@ -66,7 +64,7 @@ export default function Home() {
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
-      url: "https://www.myinstants.com/media/sounds/school-fire-alarm_1.mp3",
+      url: "https://www.myinstants.com/media/sounds/school-fire-alarm-sound-effect-hd.mp3",
       autostart: false,
       loop: true,
     }).toDestination();

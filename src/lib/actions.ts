@@ -52,25 +52,26 @@ export async function logout() {
     redirect('/');
 }
 
-type AirRaidAlert = {
-    id: string;
-    location_title: string;
-    location_type: string;
-    alert_type: string;
+type UkraineAlarmAlert = {
+    regionId: string;
+    regionName: string;
+    regionEngName: string;
+    lastUpdate: string;
+    activeAlerts: any[]; // The actual type is more complex, but we don't need details for now
 }
 
-export async function getAirRaidAlerts(): Promise<AirRaidAlert[]> {
-    const apiKey = process.env.ALERTS_IN_UA_API_KEY;
+export async function getAirRaidAlerts(): Promise<UkraineAlarmAlert[]> {
+    const apiKey = process.env.UKRAINE_ALARM_API_KEY;
     if (!apiKey) {
-        console.error("ALERTS_IN_UA_API_KEY is not set in .env");
+        console.error("UKRAINE_ALARM_API_KEY is not set in .env");
         return [];
     }
 
     try {
-        const response = await fetch('https://alerts.in.ua/v1/alerts/active.json', {
+        const response = await fetch('https://api.ukrainealarm.com/api/v3/alerts', {
             headers: {
-                // @ts-ignore
-                'X-API-Key': apiKey,
+                 // @ts-ignore
+                'Authorization': apiKey,
             },
         });
 
@@ -78,8 +79,8 @@ export async function getAirRaidAlerts(): Promise<AirRaidAlert[]> {
             throw new Error(`API call failed with status: ${response.status}`);
         }
 
-        const data = (await response.json()) as { alerts: AirRaidAlert[] };
-        return data.alerts;
+        const data = (await response.json()) as UkraineAlarmAlert[];
+        return data;
     } catch (error) {
         console.error('Failed to fetch air raid alerts:', error);
         return [];
