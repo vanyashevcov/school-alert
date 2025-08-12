@@ -27,14 +27,13 @@ export default function Home() {
   const [fireAlert, setFireAlert] = useState<EmergencyAlert | null>(null);
   
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
-  const airRaidSynth = useRef<Tone.Synth | null>(null);
-  const airRaidInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const airRaidPlayer = useRef<Tone.Player | null>(null);
 
 
    useEffect(() => {
-    airRaidSynth.current = new Tone.Synth({
-        oscillator: { type: "sawtooth" },
-        envelope: { attack: 0.5, decay: 0.1, sustain: 1, release: 0.5 }
+    airRaidPlayer.current = new Tone.Player({
+      url: "/air-raid-siren.mp3",
+      loop: true,
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
@@ -44,11 +43,8 @@ export default function Home() {
     }).toDestination();
 
     return () => {
-        airRaidSynth.current?.dispose();
+        airRaidPlayer.current?.dispose();
         fireAlarmPlayer.current?.dispose();
-        if (airRaidInterval.current) {
-            clearInterval(airRaidInterval.current);
-        }
     }
   }, []);
 
@@ -87,27 +83,14 @@ export default function Home() {
   useInterval(checkAlerts, 60000); 
 
   const playAirRaidSound = () => {
-    if (Tone.context.state !== 'running' || !airRaidSynth.current || airRaidInterval.current) return;
-    
-    const pattern = [440, 880];
-    let index = 0;
-
-    const playNote = () => {
-        if (!airRaidSynth.current) return;
-        airRaidSynth.current.triggerAttack(pattern[index]);
-        index = (index + 1) % pattern.length;
+    if (Tone.context.state !== 'running' || !airRaidPlayer.current || !airRaidPlayer.current.loaded) return;
+    if (airRaidPlayer.current.state !== 'started') {
+        airRaidPlayer.current.start();
     }
-
-    playNote(); // Play immediately
-    airRaidInterval.current = setInterval(playNote, 5000);
   };
   
   const stopAirRaidSound = () => {
-    if (airRaidInterval.current) {
-      clearInterval(airRaidInterval.current);
-      airRaidInterval.current = null;
-    }
-    airRaidSynth.current?.triggerRelease();
+    airRaidPlayer.current?.stop();
   };
 
   useEffect(() => {
