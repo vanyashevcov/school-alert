@@ -65,18 +65,19 @@ export async function getPoltavaAlertStatus(): Promise<string> {
             res.on('end', () => {
                 if (res.statusCode === 200) {
                     try {
-                        // The response is a single long string, not JSON.
-                        const statusesString = data;
-                        if (statusesString.length > poltavaUID) {
+                        const jsonResponse = JSON.parse(data);
+                        const statusesString = jsonResponse.states;
+
+                        if (statusesString && statusesString.length > poltavaUID) {
                             const status = statusesString.charAt(poltavaUID);
                             // Return 'N' for space or any other unexpected character
                             resolve(['A', 'P'].includes(status) ? status : 'N');
                         } else {
-                            console.error(`Statuses string is too short. Length: ${statusesString.length}, UID: ${poltavaUID}`);
+                            console.error(`Statuses string is too short or missing. Length: ${statusesString?.length}, UID: ${poltavaUID}`);
                             resolve("N");
                         }
                     } catch (e: any) {
-                        console.error('Error parsing response from alerts API:', e.message);
+                        console.error('Error parsing JSON response from alerts API:', e.message);
                         resolve("N");
                     }
                 } else {
