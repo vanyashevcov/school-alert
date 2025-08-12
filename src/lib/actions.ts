@@ -47,21 +47,21 @@ export async function getPoltavaAlertStatus(): Promise<string> {
 
     if (!apiKey) {
         console.error("ALERTS_IN_UA_API_KEY is not set in .env");
-        return "N";
+        return "N"; // Default to safe status if no key
     }
 
     try {
         const response = await fetch(`https://api.alerts.in.ua/v1/iot/active_air_raid_alerts/${poltavaOblastUID}.json?token=${apiKey}`);
         
-        // The API returns the status as plain text/json string, not a full JSON object when successful
         if (response.ok) {
             const status = await response.json() as string;
-            // It returns the string with quotes, e.g. "A", so we remove them.
-            return status.replace(/"/g, ''); 
+            // The API returns a plain string like "A", "P", or "N". No need to process it further.
+            return status;
         } else {
              const errorBody = await response.text();
              console.error(`API call failed with status: ${response.status}`, errorBody);
-             throw new Error(`API call failed with status: ${response.status}`);
+             // Return "N" as a safe default if API fails
+             return "N";
         }
     } catch (error) {
         console.error('Failed to fetch air raid status:', error);
