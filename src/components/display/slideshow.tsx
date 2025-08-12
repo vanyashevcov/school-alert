@@ -10,7 +10,6 @@ import { db } from '@/lib/firebase';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
 import { Megaphone, AlertTriangle, Siren, Info } from 'lucide-react';
-import { ScrollArea } from '../ui/scroll-area';
 
 // Augment the window object
 declare global {
@@ -141,7 +140,7 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
       const config = textSlideConfig[slide.textType || 'normal'];
       const Icon = config.icon;
       const textAlign = slide.textAlign || 'center';
-      const fontSize = slide.fontSize || 48; // Default to 48px if not set
+      const fontSize = slide.fontSize || 48;
 
       return (
         <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8", config.backgroundClass)}>
@@ -152,7 +151,7 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
                     {slide.title && <CardTitle className={cn("text-4xl md:text-6xl font-bold drop-shadow-sm", config.titleClass)}>{slide.title}</CardTitle>}
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 overflow-y-auto p-6">
+              <CardContent className="flex-1 overflow-y-auto p-6 flex flex-col justify-center">
                  <div className="flex items-center justify-center h-full">
                     <p 
                         className="font-medium leading-tight text-balance whitespace-pre-wrap"
@@ -170,7 +169,27 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
   }
 }
 
-export default function Slideshow() {
+function AirRaidAlertSlide() {
+    const config = textSlideConfig['urgent'];
+    const Icon = config.icon;
+    return (
+        <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8 animate-pulse", config.backgroundClass)}>
+            <Card className={cn("max-w-5xl w-full max-h-[90vh] flex flex-col border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass, "text-center")}>
+                <CardHeader>
+                    <div className="flex flex-col justify-center items-center gap-4">
+                        <Icon className={cn("h-24 md:h-32 w-24 md:w-32 drop-shadow-lg", config.iconClass)} />
+                        <CardTitle className={cn("text-5xl md:text-8xl font-black drop-shadow-sm", config.titleClass)}>Повітряна тривога!</CardTitle>
+                    </div>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-y-auto p-6 flex flex-col justify-center">
+                    <p className="text-4xl md:text-6xl font-bold leading-tight">Пройдіть в укриття!</p>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+export default function Slideshow({ isAlertActive }: { isAlertActive: boolean }) {
   const [slides, setSlides] = useState<SlideContent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isApiReady, setIsApiReady] = useState(false);
@@ -200,7 +219,7 @@ export default function Slideshow() {
     if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
     }
-    if (slides.length === 0) return;
+    if (slides.length === 0 || isAlertActive) return;
     
     const currentSlideData = slides[currentSlide];
     if (!currentSlideData || currentSlideData.type === 'video') return;
@@ -216,8 +235,12 @@ export default function Slideshow() {
           clearTimeout(timeoutRef.current);
       }
     };
-  }, [currentSlide, slides]);
+  }, [currentSlide, slides, isAlertActive]);
   
+
+  if (isAlertActive) {
+      return <AirRaidAlertSlide />;
+  }
 
   if (slides.length === 0) {
     return <div className="flex items-center justify-center h-full">Завантаження слайдів...</div>
