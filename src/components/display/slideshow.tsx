@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { type SlideContent, type TextSlideType, type EmergencyAlert } from '@/lib/types';
-import { type AirRaidAlertOutput } from '@/ai/flows/air-raid-alert-reasoning';
+import type { AirRaidAlertOutput } from '@/app/page';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Script from 'next/script';

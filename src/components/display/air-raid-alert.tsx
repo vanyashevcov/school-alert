@@ -2,7 +2,7 @@
 'use client';
 
 import { Siren, ShieldCheck } from 'lucide-react';
-import { type AirRaidAlertOutput } from '@/ai/flows/air-raid-alert-reasoning';
+import type { AirRaidAlertOutput } from '@/app/page';
 import { cn } from '@/lib/utils';
 
 export default function AirRaidAlert({ alertState }: { alertState: AirRaidAlertOutput | null }) {

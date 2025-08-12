@@ -36,3 +36,10 @@ export type EmergencyAlert = {
     isActive: boolean;
     message: string;
 };
+
+export type AirRaidAlert = {
+    id: string;
+    location_title: string;
+    location_type: string;
+    alert_type: string;
+};

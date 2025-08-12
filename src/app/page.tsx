@@ -11,21 +11,22 @@ import Slideshow from '@/components/display/slideshow';
 import TimeAndDate from '@/components/display/time-and-date';
 import { useInterval } from '@/hooks/use-interval';
 import { getAirRaidAlerts } from '@/lib/actions';
-import { analyzeAirRaidAlert, type AirRaidAlertOutput } from '@/ai/flows/air-raid-alert-reasoning';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { EmergencyAlert } from '@/lib/types';
+import type { EmergencyAlert, AirRaidAlert as AirRaidAlertType } from '@/lib/types';
 
+export interface AirRaidAlertOutput {
+  shouldAlert: boolean;
+  reason: string;
+}
 
 async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
   try {
     const alerts = await getAirRaidAlerts();
-    const poltavaCityAlert = alerts.find(alert => 
-        alert.location_title === 'м. Полтава'
-    );
+    const poltavaCityAlert = alerts.find(alert => alert.location_title === 'м. Полтава');
     const poltavaOblastAlert = alerts.find(alert => alert.location_title === 'Полтавська область');
 
-    let relevantAlert = null;
+    let relevantAlert: AirRaidAlertType | undefined;
     if (poltavaCityAlert) {
       relevantAlert = poltavaCityAlert;
     } else if (poltavaOblastAlert) {
@@ -33,17 +34,15 @@ async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
     }
 
     if (relevantAlert) {
-      return analyzeAirRaidAlert({
-        city: relevantAlert.location_title,
-        alertStatus: true,
-        alertMessage: `Повітряна тривога в ${relevantAlert.location_title}`,
-      });
+      return {
+        shouldAlert: true,
+        reason: `Тривога у ${relevantAlert.location_title}`,
+      };
     } else {
-      return analyzeAirRaidAlert({
-        city: 'м. Полтава',
-        alertStatus: false,
-        alertMessage: 'Відбій тривоги',
-      });
+      return {
+        shouldAlert: false,
+        reason: 'Відбій тривоги',
+      };
     }
   } catch (error) {
     console.error('Error fetching air raid status:', error);
