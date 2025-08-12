@@ -64,12 +64,14 @@ export default function Home() {
         url: "https://www.myinstants.com/media/sounds/air-raid-siren.mp3",
         autostart: false,
         loop: true,
+        volume: 0,
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
       url: "https://www.myinstants.com/media/sounds/school-fire-alarm.mp3",
       autostart: false,
       loop: true,
+      volume: 0,
     }).toDestination();
 
     return () => {
@@ -112,12 +114,11 @@ export default function Home() {
   useInterval(checkAlerts, 30000); 
 
   useEffect(() => {
-    const playSound = async (player: Tone.Player | null) => {
-      if (Tone.context.state !== 'running' || !player) return;
-      // Check if the player has loaded the buffer before starting
-      if (player.loaded && player.state !== 'started') {
-        player.start();
-      }
+    const playSound = (player: Tone.Player | null) => {
+        if (Tone.context.state !== 'running' || !player) return;
+        if (player.loaded && player.state !== 'started') {
+            player.start();
+        }
     }
     
     if (fireAlert?.isActive) {
@@ -127,7 +128,7 @@ export default function Home() {
         fireAlarmPlayer.current?.stop();
         if (alertState?.shouldAlert) {
             // Only play if the alert just became active
-            if (lastAlertStatus === false) { 
+            if (lastAlertStatus === false || lastAlertStatus === null) {
                 playSound(sirenPlayer.current);
             }
         } else {

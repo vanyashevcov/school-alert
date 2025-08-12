@@ -26,7 +26,7 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
 
     useEffect(() => {
         if (!isActive) {
-            if (playerRef.current) {
+            if (playerRef.current && typeof playerRef.current.destroy === 'function') {
                 try {
                     playerRef.current.destroy();
                 } catch (e) {
@@ -38,11 +38,11 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
         }
 
         const createPlayer = () => {
-            if (playerRef.current) {
+             if (playerRef.current && typeof playerRef.current.destroy === 'function') {
                  try {
                     playerRef.current.destroy();
                 } catch (e) {
-                    console.error("Error destroying player", e);
+                    console.error("Error destroying existing player", e);
                 }
             }
             playerRef.current = new window.YT.Player(playerContainerId, {
@@ -53,13 +53,13 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
                     loop: 0, 
                     modestbranding: 1,
                     rel: 0,
-                    playsinline: 1
+                    playsinline: 1,
+                    mute: 1, // Mute to allow autoplay
                 },
                 events: {
                     'onReady': (event: any) => {
                         onReady();
                         event.target.playVideo();
-                        event.target.mute(); // Mute for autoplay policies
                     },
                     'onStateChange': (event: any) => {
                         if (event.data === window.YT.PlayerState.ENDED) {
@@ -79,11 +79,11 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
         }
 
         return () => {
-             if (playerRef.current) {
+             if (playerRef.current && typeof playerRef.current.destroy === 'function') {
                 try {
                     playerRef.current.destroy();
                 } catch (e) {
-                    console.error("Error destroying player", e)
+                    console.error("Error destroying player on cleanup", e)
                 }
                 playerRef.current = null;
             }
@@ -91,7 +91,6 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
 
     }, [isActive, videoId, onEnd, onReady, playerContainerId]);
     
-    // Using iframe directly with src params for autoplay, as YT.Player can be tricky with frameworks
     return <div id={playerContainerId} className="w-full h-full"></div>;
 }
 

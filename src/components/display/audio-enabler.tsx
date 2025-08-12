@@ -1,23 +1,43 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as Tone from 'tone';
-import { Volume2 } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function AudioEnabler() {
-  const [isAudioEnabled, setIsAudioEnabled] = useState(Tone.context.state === 'running');
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+
+  useEffect(() => {
+      // Check initial state
+      setIsAudioEnabled(Tone.context.state === 'running');
+      setIsMuted(Tone.Destination.mute);
+  }, []);
 
   const handleEnableAudio = async () => {
     if (Tone.context.state !== 'running') {
       await Tone.start();
     }
+    Tone.Destination.mute = false;
     setIsAudioEnabled(true);
+    setIsMuted(false);
   };
+  
+  const handleToggleMute = () => {
+    Tone.Destination.mute = !Tone.Destination.mute;
+    setIsMuted(Tone.Destination.mute);
+  }
 
   if (isAudioEnabled) {
-    return null;
+    return (
+        <div className="absolute bottom-20 right-4 z-[100]">
+            <Button onClick={handleToggleMute} size="icon" variant="ghost" className="bg-black/20 text-white hover:bg-black/40 hover:text-white rounded-full h-12 w-12">
+                {isMuted ? <VolumeX /> : <Volume2 />}
+            </Button>
+        </div>
+    );
   }
 
   return (
