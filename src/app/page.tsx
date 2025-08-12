@@ -21,7 +21,7 @@ export interface AirRaidAlertOutput {
 }
 
 export default function Home() {
-  const [alertState, setAlertState] = useState<AirRaidAlertOutput | null>(null);
+  const [airRaidAlert, setAirRaidAlert] = useState<AirRaidAlertOutput | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [lastAlertStatus, setLastAlertStatus] = useState<boolean | null>(null);
   const [fireAlert, setFireAlert] = useState<EmergencyAlert | null>(null);
@@ -32,7 +32,7 @@ export default function Home() {
 
    useEffect(() => {
     airRaidPlayer.current = new Tone.Player({
-      url: "/air-raid-siren.mp3",
+      url: "/Air-raid-siren.mp3",
       loop: true,
     }).toDestination();
     
@@ -67,10 +67,10 @@ export default function Home() {
       const status = await getPoltavaAlertStatus();
       const shouldAlert = status === 'A' || status === 'P';
       const reason = status === 'A' ? 'Тривога у м. Полтава' : 'Часткова тривога';
-      setAlertState({ shouldAlert, reason: shouldAlert ? reason : 'Відбій тривоги' });
+      setAirRaidAlert({ shouldAlert, reason: shouldAlert ? reason : 'Відбій тривоги' });
     } catch (error) {
       console.error('Error fetching air raid status:', error);
-      setAlertState({ shouldAlert: false, reason: 'Помилка отримання даних.' });
+      setAirRaidAlert({ shouldAlert: false, reason: 'Помилка отримання даних.' });
     } finally {
       setIsChecking(false);
     }
@@ -106,7 +106,7 @@ export default function Home() {
         playFireSound(fireAlarmPlayer.current);
     } else {
         fireAlarmPlayer.current?.stop();
-        if (alertState?.shouldAlert) {
+        if (airRaidAlert?.shouldAlert) {
             if (lastAlertStatus === false || lastAlertStatus === null) {
                 playAirRaidSound();
             }
@@ -115,13 +115,13 @@ export default function Home() {
         }
     }
     
-    if (alertState) {
-        setLastAlertStatus(alertState.shouldAlert);
+    if (airRaidAlert) {
+        setLastAlertStatus(airRaidAlert.shouldAlert);
     }
 
-  }, [alertState, lastAlertStatus, fireAlert]);
+  }, [airRaidAlert, lastAlertStatus, fireAlert]);
 
-  const isAnyAlertActive = fireAlert?.isActive || (alertState?.shouldAlert ?? false);
+  const isAnyAlertActive = fireAlert?.isActive || (airRaidAlert?.shouldAlert ?? false);
 
 
   return (
@@ -132,10 +132,10 @@ export default function Home() {
         <div className="bg-black/20 p-4 rounded-lg">
           <TimeAndDate />
         </div>
-        <AirRaidAlert alertState={alertState} />
+        <AirRaidAlert alertState={airRaidAlert} />
       </header>
       <main className="flex-1">
-        <Slideshow isAlertActive={isAnyAlertActive} fireAlert={fireAlert} airRaidAlert={alertState}/>
+        <Slideshow isAlertActive={isAnyAlertActive} fireAlert={fireAlert} airRaidAlert={airRaidAlert}/>
       </main>
       <footer className="absolute bottom-0 left-0 right-0 z-10 h-16">
         <NewsTicker />
