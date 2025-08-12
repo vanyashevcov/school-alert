@@ -12,6 +12,9 @@ import TimeAndDate from '@/components/display/time-and-date';
 import { useInterval } from '@/hooks/use-interval';
 import { getAirRaidAlerts } from '@/lib/actions';
 import { analyzeAirRaidAlert, type AirRaidAlertOutput } from '@/ai/flows/air-raid-alert-reasoning';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { EmergencyAlert } from '@/lib/types';
 
 
 async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
@@ -48,7 +51,9 @@ export default function Home() {
   const [alertState, setAlertState] = useState<AirRaidAlertOutput | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [lastAlertStatus, setLastAlertStatus] = useState<boolean | null>(null);
+  const [fireAlert, setFireAlert] = useState<EmergencyAlert | null>(null);
   const sirenPlayer = useRef<Tone.Player | null>(null);
+  const fireAlarmPlayer = useRef<Tone.Player | null>(null);
 
    useEffect(() => {
     sirenPlayer.current = new Tone.Player({
@@ -57,10 +62,30 @@ export default function Home() {
         loop: true,
     }).toDestination();
     
+    fireAlarmPlayer.current = new Tone.Player({
+      url: "https://www.myinstants.com/media/sounds/school-fire-alarm.mp3",
+      autostart: false,
+      loop: true,
+    }).toDestination();
+
     return () => {
         sirenPlayer.current?.dispose();
+        fireAlarmPlayer.current?.dispose();
     }
   }, []);
+
+  useEffect(() => {
+    const fireAlertDocRef = doc(db, 'emergencyAlerts', 'fireAlarm');
+    const unsubscribe = onSnapshot(fireAlertDocRef, (doc) => {
+      if (doc.exists()) {
+        setFireAlert(doc.data() as EmergencyAlert);
+      } else {
+        setFireAlert({ id: 'fireAlarm', isActive: false, message: 'Увага! Пожежна тривога! Негайно покиньте приміщення, слідуючи плану евакуації.'});
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
 
   const checkAlerts = async () => {
     if (isChecking) return;
@@ -83,23 +108,33 @@ export default function Home() {
   useInterval(checkAlerts, 30000); 
 
   useEffect(() => {
-    const playSound = async () => {
-      if (Tone.context.state !== 'running' || !sirenPlayer.current) return;
-      if (sirenPlayer.current.loaded) {
-          sirenPlayer.current.start();
+    const playSound = async (player: Tone.Player | null) => {
+      if (Tone.context.state !== 'running' || !player) return;
+      if (player.loaded) {
+          player.start();
       }
     }
-
-    if (alertState?.shouldAlert) {
-      if (!lastAlertStatus) { // Alert just became active
-          playSound();
-      }
-    } else {
+    
+    if (fireAlert?.isActive) {
+        playSound(fireAlarmPlayer.current);
         sirenPlayer.current?.stop();
+    } else {
+        fireAlarmPlayer.current?.stop();
+        if (alertState?.shouldAlert) {
+            if (!lastAlertStatus) { // Air raid alert just became active
+                playSound(sirenPlayer.current);
+            }
+        } else {
+            sirenPlayer.current?.stop();
+        }
     }
-
+    
     setLastAlertStatus(alertState?.shouldAlert ?? null);
-  }, [alertState, lastAlertStatus]);
+
+  }, [alertState, lastAlertStatus, fireAlert]);
+
+  const isAnyAlertActive = fireAlert?.isActive || (alertState?.shouldAlert ?? false);
+
 
   return (
     <div className="relative flex h-full w-full flex-col">
@@ -112,7 +147,7 @@ export default function Home() {
         <AirRaidAlert alertState={alertState} />
       </header>
       <main className="flex-1">
-        <Slideshow isAlertActive={alertState?.shouldAlert ?? false} />
+        <Slideshow isAlertActive={isAnyAlertActive} fireAlert={fireAlert} airRaidAlert={alertState}/>
       </main>
       <footer className="absolute bottom-0 left-0 right-0 z-10 h-16">
         <NewsTicker />

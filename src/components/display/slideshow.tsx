@@ -4,12 +4,13 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { type SlideContent, type TextSlideType } from '@/lib/types';
+import { type SlideContent, type TextSlideType, type EmergencyAlert } from '@/lib/types';
+import { type AirRaidAlertOutput } from '@/ai/flows/air-raid-alert-reasoning';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
-import { Megaphone, AlertTriangle, Siren, Info } from 'lucide-react';
+import { Megaphone, AlertTriangle, Siren, Info, Flame } from 'lucide-react';
 
 // Augment the window object
 declare global {
@@ -169,27 +170,26 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
   }
 }
 
-function AirRaidAlertSlide() {
-    const config = textSlideConfig['urgent'];
-    const Icon = config.icon;
+function AlertSlide({title, message, icon: Icon, configKey = 'urgent'}: {title: string, message: string, icon: React.FC<any>, configKey?: TextSlideType}) {
+    const config = textSlideConfig[configKey];
     return (
         <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8 animate-pulse", config.backgroundClass)}>
             <Card className={cn("max-w-5xl w-full max-h-[90vh] flex flex-col border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass, "text-center")}>
                 <CardHeader>
                     <div className="flex flex-col justify-center items-center gap-4">
                         <Icon className={cn("h-24 md:h-32 w-24 md:w-32 drop-shadow-lg", config.iconClass)} />
-                        <CardTitle className={cn("text-5xl md:text-8xl font-black drop-shadow-sm", config.titleClass)}>Повітряна тривога!</CardTitle>
+                        <CardTitle className={cn("text-5xl md:text-8xl font-black drop-shadow-sm", config.titleClass)}>{title}</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-6 flex flex-col justify-center">
-                    <p className="text-4xl md:text-6xl font-bold leading-tight">Пройдіть в укриття!</p>
+                    <p className="text-4xl md:text-6xl font-bold leading-tight" dangerouslySetInnerHTML={{ __html: message }}></p>
                 </CardContent>
             </Card>
         </div>
     )
 }
 
-export default function Slideshow({ isAlertActive }: { isAlertActive: boolean }) {
+export default function Slideshow({ isAlertActive, fireAlert, airRaidAlert }: { isAlertActive: boolean; fireAlert: EmergencyAlert | null; airRaidAlert: AirRaidAlertOutput | null }) {
   const [slides, setSlides] = useState<SlideContent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isApiReady, setIsApiReady] = useState(false);
@@ -238,8 +238,12 @@ export default function Slideshow({ isAlertActive }: { isAlertActive: boolean })
   }, [currentSlide, slides, isAlertActive]);
   
 
-  if (isAlertActive) {
-      return <AirRaidAlertSlide />;
+  if (fireAlert?.isActive) {
+      return <AlertSlide title="Пожежна тривога!" message={fireAlert.message} icon={Flame} configKey="urgent" />;
+  }
+
+  if (airRaidAlert?.shouldAlert) {
+      return <AlertSlide title="Повітряна тривога!" message="Пройдіть в укриття!" icon={Siren} configKey="urgent" />;
   }
 
   if (slides.length === 0) {

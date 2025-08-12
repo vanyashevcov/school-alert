@@ -30,3 +30,9 @@ export type NewsItem = {
     text: string;
     createdAt: Timestamp;
 };
+
+export type EmergencyAlert = {
+    id: 'fireAlarm';
+    isActive: boolean;
+    message: string;
+};

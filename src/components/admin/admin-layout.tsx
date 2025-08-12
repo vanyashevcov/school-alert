@@ -1,7 +1,7 @@
 
 'use client';
 
-import { FileVideo, BellRing, School, LogOut, Newspaper } from 'lucide-react';
+import { FileVideo, BellRing, School, LogOut, Newspaper, TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -81,6 +81,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <SidebarMenuButton as="a" tooltip="Рядок новин" isActive={pathname === '/admin/news'}>
                             <Newspaper />
                             <span className="truncate">Новини</span>
+                        </SidebarMenuButton>
+                      </Link>
+                    </SidebarMenuItem>
+                     <SidebarMenuItem>
+                       <Link href="/admin/emergency" passHref>
+                        <SidebarMenuButton as="a" tooltip="Аварійні тривоги" isActive={pathname === '/admin/emergency'}>
+                            <TriangleAlert />
+                            <span className="truncate">Тривоги</span>
                         </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
