@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import fetch from 'node-fetch';
+import https from 'https';
 
 const loginSchema = z.object({
   email: z.string().email("Невірний формат електронної пошти"),
@@ -42,36 +42,55 @@ export async function logout() {
 }
 
 export async function getPoltavaAlertStatus(): Promise<string> {
-    const apiKey = process.env.ALERTS_IN_UA_API_KEY;
-    // UID for Poltava city
-    const poltavaUID = 1060; 
+    return new Promise((resolve, reject) => {
+        const apiKey = process.env.ALERTS_IN_UA_API_KEY;
+        // UID for Poltava city
+        const poltavaUID = 1060;
 
-    if (!apiKey) {
-        console.error("ALERTS_IN_UA_API_KEY is not set in .env");
-        return "N"; // Default to safe status if no key
-    }
-
-    try {
-        const response = await fetch(`https://api.alerts.in.ua/v1/iot/active_air_raid_alerts.json?token=${apiKey}`);
-        
-        if (response.ok) {
-            const statusesString = await response.text();
-            if (statusesString.length > poltavaUID) {
-                const status = statusesString.charAt(poltavaUID);
-                // Return 'N' for space or any other unexpected character
-                return ['A', 'P'].includes(status) ? status : 'N';
-            }
-            console.error(`Statuses string is too short. Length: ${statusesString.length}, UID: ${poltavaUID}`);
-            return "N";
-        } else {
-             const errorBody = await response.text();
-             console.error(`API call failed with status: ${response.status}`, errorBody);
-             // Return "N" as a safe default if API fails
-             return "N";
+        if (!apiKey) {
+            console.error("ALERTS_IN_UA_API_KEY is not set in .env");
+            resolve("N"); // Default to safe status if no key
+            return;
         }
-    } catch (error) {
-        console.error('Failed to fetch air raid status:', error);
-        // Return "N" as a safe default in case of any error
-        return "N"; 
-    }
+
+        const url = `https://api.alerts.in.ua/v1/iot/active_air_raid_alerts.json?token=${apiKey}`;
+
+        const req = https.get(url, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    try {
+                        // The response is a single long string, not JSON.
+                        const statusesString = data;
+                        if (statusesString.length > poltavaUID) {
+                            const status = statusesString.charAt(poltavaUID);
+                            // Return 'N' for space or any other unexpected character
+                            resolve(['A', 'P'].includes(status) ? status : 'N');
+                        } else {
+                            console.error(`Statuses string is too short. Length: ${statusesString.length}, UID: ${poltavaUID}`);
+                            resolve("N");
+                        }
+                    } catch (e: any) {
+                        console.error('Error parsing response from alerts API:', e.message);
+                        resolve("N");
+                    }
+                } else {
+                    console.error(`API call failed with status: ${res.statusCode}`, data);
+                    resolve("N");
+                }
+            });
+        });
+
+        req.on('error', (error) => {
+            console.error('Failed to fetch air raid status with https module:', error);
+            resolve("N");
+        });
+
+        req.end();
+    });
 }
