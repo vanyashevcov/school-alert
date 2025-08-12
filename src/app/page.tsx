@@ -20,37 +20,6 @@ export interface AirRaidAlertOutput {
   reason: string;
 }
 
-async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
-  try {
-    const status = await getPoltavaAlertStatus();
-
-    switch (status) {
-      case 'A':
-        return {
-          shouldAlert: true,
-          reason: `Тривога у м. Полтава`,
-        };
-      case 'P': // Partial alert in the oblast, but we treat it as a full alert for the city for safety
-        return {
-          shouldAlert: true,
-          reason: `Часткова тривога у Полтавській області`,
-        };
-      case 'N':
-        return {
-          shouldAlert: false,
-          reason: 'Відбій тривоги',
-        };
-      default:
-        // This can happen if the API returns an error message or unexpected value like a space
-        console.warn('Unexpected response from alerts API:', status);
-        return { shouldAlert: false, reason: 'Помилка формату даних.' };
-    }
-  } catch (error) {
-    console.error('Error fetching air raid status:', error);
-    return { shouldAlert: false, reason: 'Помилка отримання даних.' };
-  }
-}
-
 export default function Home() {
   const [alertState, setAlertState] = useState<AirRaidAlertOutput | null>(null);
   const [isChecking, setIsChecking] = useState(false);
@@ -59,13 +28,13 @@ export default function Home() {
   
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
   const airRaidSynth = useRef<Tone.Synth | null>(null);
-  const airRaidInterval = useRef<NodeJS.Timeout | null>(null);
+  const airRaidInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
 
    useEffect(() => {
     airRaidSynth.current = new Tone.Synth({
-        oscillator: { type: "sine" },
-        envelope: { attack: 0.1, decay: 0.1, sustain: 1, release: 0.5 }
+        oscillator: { type: "sawtooth" },
+        envelope: { attack: 0.5, decay: 0.1, sustain: 1, release: 0.5 }
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
@@ -95,15 +64,16 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
-
   const checkAlerts = async () => {
     if (isChecking) return;
     setIsChecking(true);
     try {
-      const analysis = await checkPoltavaAlert();
-      setAlertState(analysis);
+      const status = await getPoltavaAlertStatus();
+      const shouldAlert = status === 'A' || status === 'P';
+      const reason = status === 'A' ? 'Тривога у м. Полтава' : 'Часткова тривога';
+      setAlertState({ shouldAlert, reason: shouldAlert ? reason : 'Відбій тривоги' });
     } catch (error) {
-      console.error('Error analyzing air raid alert:', error);
+      console.error('Error fetching air raid status:', error);
       setAlertState({ shouldAlert: false, reason: 'Помилка отримання даних.' });
     } finally {
       setIsChecking(false);
@@ -119,19 +89,17 @@ export default function Home() {
   const playAirRaidSound = () => {
     if (Tone.context.state !== 'running' || !airRaidSynth.current || airRaidInterval.current) return;
     
-    let up = true;
-    let freq = 400; // стартова частота
-    airRaidInterval.current = setInterval(() => {
+    const pattern = [440, 880];
+    let index = 0;
+
+    const playNote = () => {
         if (!airRaidSynth.current) return;
-        airRaidSynth.current.triggerAttack(freq);
-        if (up) {
-            freq += 20;
-            if (freq > 800) up = false;
-        } else {
-            freq -= 20;
-            if (freq < 400) up = true;
-        }
-    }, 100);
+        airRaidSynth.current.triggerAttack(pattern[index]);
+        index = (index + 1) % pattern.length;
+    }
+
+    playNote(); // Play immediately
+    airRaidInterval.current = setInterval(playNote, 5000);
   };
   
   const stopAirRaidSound = () => {
