@@ -10,42 +10,36 @@ import NewsTicker from '@/components/display/news-ticker';
 import Slideshow from '@/components/display/slideshow';
 import TimeAndDate from '@/components/display/time-and-date';
 import { useInterval } from '@/hooks/use-interval';
-import { getAirRaidAlerts } from '@/lib/actions';
-import { collection, doc, onSnapshot } from 'firebase/firestore';
+import { getPoltavaAlertStatus } from '@/lib/actions';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { EmergencyAlert, AirRaidAlert as AirRaidAlertType } from '@/lib/types';
+import type { EmergencyAlert } from '@/lib/types';
 
 export interface AirRaidAlertOutput {
   shouldAlert: boolean;
   reason: string;
 }
 
-// Poltava Oblast UID from alerts.in.ua API
-const POLTAVA_REGION_UID = '19'; 
-
 async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
   try {
-    const response = await getAirRaidAlerts();
-    // In alerts.in.ua, the list of alerts is under the 'alerts' key.
-    const activeAlerts = response.alerts;
-    
-    if (!Array.isArray(activeAlerts)) {
-        console.error('Unexpected response format from alerts API:', response);
+    const status = await getPoltavaAlertStatus();
+
+    switch (status) {
+      case 'A': //
+      case 'P': // Partial alert, we treat it as a full alert for safety
+        return {
+          shouldAlert: true,
+          reason: `Тривога у Полтавській області`,
+        };
+      case 'N':
+        return {
+          shouldAlert: false,
+          reason: 'Відбій тривоги',
+        };
+      default:
+        // This can happen if the API returns an error message or unexpected value
+        console.warn('Unexpected response from alerts API:', status);
         return { shouldAlert: false, reason: 'Помилка формату даних.' };
-    }
-
-    const poltavaOblastAlert = activeAlerts.find(alert => alert.location_uid === POLTAVA_REGION_UID);
-
-    if (poltavaOblastAlert) {
-      return {
-        shouldAlert: true,
-        reason: `Тривога у Полтавській області`,
-      };
-    } else {
-      return {
-        shouldAlert: false,
-        reason: 'Відбій тривоги',
-      };
     }
   } catch (error) {
     console.error('Error fetching air raid status:', error);

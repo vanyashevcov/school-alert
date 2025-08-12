@@ -36,23 +36,3 @@ export type EmergencyAlert = {
     isActive: boolean;
     message: string;
 };
-
-export type AirRaidAlert = {
-  id: number;
-  location_title: string;
-  location_type: 'oblast' | 'raion' | 'city' | 'hromada' | 'unknown';
-  started_at: string; // ISO 8601 date string
-  finished_at: string | null;
-  updated_at: string; // ISO 8601 date string
-  alert_type: 'air_raid' | 'artillery_shelling' | 'urban_fights' | 'chemical' | 'nuclear';
-  location_uid: string;
-  location_oblast: string;
-  location_oblast_uid: string;
-  location_raion: string;
-  notes: string;
-  calculated: boolean;
-};
-
-export type AirRaidAlertResponse = {
-  alerts: AirRaidAlert[];
-}
