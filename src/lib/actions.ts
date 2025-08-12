@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase'; // Assuming firebase is initialized here
 import fetch from 'node-fetch';
+import type { AirRaidAlertResponse } from '@/lib/types';
+
 
 const loginSchema = z.object({
   email: z.string().email("Невірний формат електронної пошти"),
@@ -52,26 +54,18 @@ export async function logout() {
     redirect('/');
 }
 
-type UkraineAlarmAlert = {
-    regionId: string;
-    regionName: string;
-    regionEngName: string;
-    lastUpdate: string;
-    activeAlerts: any[]; // The actual type is more complex, but we don't need details for now
-}
-
-export async function getAirRaidAlerts(): Promise<UkraineAlarmAlert[]> {
-    const apiKey = process.env.UKRAINE_ALARM_API_KEY;
+export async function getAirRaidAlerts(): Promise<AirRaidAlertResponse> {
+    const apiKey = process.env.ALERTS_IN_UA_API_KEY;
     if (!apiKey) {
-        console.error("UKRAINE_ALARM_API_KEY is not set in .env");
-        return [];
+        console.error("ALERTS_IN_UA_API_KEY is not set in .env");
+        return { alerts: [] };
     }
 
     try {
-        const response = await fetch('https://api.ukrainealarm.com/api/v3/alerts', {
+        const response = await fetch('https://api.alerts.in.ua/v1/alerts/active.json', {
             headers: {
                  // @ts-ignore
-                'Authorization': apiKey,
+                'Authorization': `Bearer ${apiKey}`,
             },
         });
 
@@ -79,10 +73,10 @@ export async function getAirRaidAlerts(): Promise<UkraineAlarmAlert[]> {
             throw new Error(`API call failed with status: ${response.status}`);
         }
 
-        const data = (await response.json()) as UkraineAlarmAlert[];
+        const data = (await response.json()) as AirRaidAlertResponse;
         return data;
     } catch (error) {
         console.error('Failed to fetch air raid alerts:', error);
-        return [];
+        return { alerts: [] };
     }
 }

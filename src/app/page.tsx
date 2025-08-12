@@ -20,18 +20,23 @@ export interface AirRaidAlertOutput {
   reason: string;
 }
 
-// Poltava Oblast regionId from Ukraine Alarm API
-const POLTAVA_REGION_ID = '14'; 
+// Poltava Oblast UID from alerts.in.ua API
+const POLTAVA_REGION_UID = '19'; 
 
 async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
   try {
-    const alerts = await getAirRaidAlerts();
-    const poltavaOblastAlert = alerts.find(alert => alert.regionId === POLTAVA_REGION_ID);
+    const response = await getAirRaidAlerts();
+    // In alerts.in.ua, the list of alerts is under the 'alerts' key.
+    const activeAlerts = response.alerts;
+    
+    if (!Array.isArray(activeAlerts)) {
+        console.error('Unexpected response format from alerts API:', response);
+        return { shouldAlert: false, reason: 'Помилка формату даних.' };
+    }
 
-    if (poltavaOblastAlert && poltavaOblastAlert.activeAlerts.length > 0) {
-      // Assuming the first active alert is the most relevant one for the reason.
-      // The API provides different alert types, we can specify if needed.
-      // For now, any active alert in the region triggers the alarm.
+    const poltavaOblastAlert = activeAlerts.find(alert => alert.location_uid === POLTAVA_REGION_UID);
+
+    if (poltavaOblastAlert) {
       return {
         shouldAlert: true,
         reason: `Тривога у Полтавській області`,
