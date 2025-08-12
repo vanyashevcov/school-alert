@@ -70,6 +70,8 @@ export async function getAirRaidAlerts(): Promise<AirRaidAlertResponse> {
         });
 
         if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`API call failed with status: ${response.status}`, errorBody);
             throw new Error(`API call failed with status: ${response.status}`);
         }
 
