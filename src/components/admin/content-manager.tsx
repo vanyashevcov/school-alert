@@ -37,7 +37,7 @@ export default function ContentManager() {
     return () => unsubscribe();
   }, []);
 
-  const handleSave = async (slideData: Omit<SlideContent, 'id' | 'createdAt'>) => {
+  const handleSave = async (slideData: Partial<Omit<SlideContent, 'id' | 'createdAt'>>) => {
     try {
       if (editingSlide) {
         const slideDoc = doc(db, 'slides', editingSlide.id);

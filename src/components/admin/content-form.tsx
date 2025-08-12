@@ -31,7 +31,7 @@ type ContentFormValues = z.infer<typeof formSchema>;
 
 interface ContentFormProps {
     slide: SlideContent | null;
-    onSave: (data: ContentFormValues) => void;
+    onSave: (data: Partial<ContentFormValues>) => void;
     onCancel: () => void;
 }
 
@@ -61,11 +61,11 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
   const watchFontSize = form.watch('fontSize');
 
   function onSubmit(data: ContentFormValues) {
-    const finalData = {
-        ...data,
-        textType: data.type === 'text' ? data.textType : undefined,
-        textAlign: data.type === 'text' ? data.textAlign : undefined,
-        fontSize: data.type === 'text' ? data.fontSize : undefined,
+    const finalData: Partial<ContentFormValues> = { ...data };
+    if (data.type !== 'text') {
+        delete finalData.textType;
+        delete finalData.textAlign;
+        delete finalData.fontSize;
     }
     onSave(finalData);
   }
