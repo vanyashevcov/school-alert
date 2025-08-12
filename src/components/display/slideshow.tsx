@@ -23,7 +23,7 @@ declare global {
 
 function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string, onEnd: () => void, onReady: () => void, isActive: boolean }) {
     const playerRef = useRef<any>(null);
-    const playerContainerId = `youtube-player-${videoId}-${Math.random()}`;
+    const playerContainerId = useRef(`youtube-player-${videoId}-${Math.random()}`).current;
 
     useEffect(() => {
         if (!isActive) {
