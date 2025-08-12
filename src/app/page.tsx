@@ -109,7 +109,7 @@ export default function Home() {
     checkAlerts();
   }, []);
   
-  useInterval(checkAlerts, 30000); 
+  useInterval(checkAlerts, 6000); 
 
   useEffect(() => {
     const playSound = (player: Tone.Player | null) => {
