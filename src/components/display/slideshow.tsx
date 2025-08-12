@@ -11,6 +11,7 @@ import { db } from '@/lib/firebase';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
 import { Megaphone, AlertTriangle, Siren, Info, Flame } from 'lucide-react';
+import * as Tone from 'tone';
 
 // Augment the window object
 declare global {
@@ -54,11 +55,16 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
                     modestbranding: 1,
                     rel: 0,
                     playsinline: 1,
-                    mute: 1, // Mute to allow autoplay
+                    mute: 0, // Unmute to allow sound if browser permits
                 },
                 events: {
                     'onReady': (event: any) => {
                         onReady();
+                        if (Tone.context.state === 'running') {
+                            event.target.unMute();
+                        } else {
+                            event.target.mute();
+                        }
                         event.target.playVideo();
                     },
                     'onStateChange': (event: any) => {
@@ -226,7 +232,7 @@ export default function Slideshow({ isAlertActive, fireAlert, airRaidAlert }: { 
   }, []);
 
   const handleNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+    setCurrentSlide((prev) => (prev + 1) % (slides.length || 1));
   };
   
   const setupTimeout = () => {

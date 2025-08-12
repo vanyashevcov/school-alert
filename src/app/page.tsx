@@ -64,14 +64,12 @@ export default function Home() {
         url: "https://www.myinstants.com/media/sounds/air-raid-siren.mp3",
         autostart: false,
         loop: true,
-        volume: 0,
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
       url: "https://www.myinstants.com/media/sounds/school-fire-alarm.mp3",
       autostart: false,
       loop: true,
-      volume: 0,
     }).toDestination();
 
     return () => {
@@ -115,8 +113,8 @@ export default function Home() {
 
   useEffect(() => {
     const playSound = (player: Tone.Player | null) => {
-        if (Tone.context.state !== 'running' || !player) return;
-        if (player.loaded && player.state !== 'started') {
+        if (Tone.context.state !== 'running' || !player || !player.loaded) return;
+        if (player.state !== 'started') {
             player.start();
         }
     }
