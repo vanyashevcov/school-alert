@@ -56,14 +56,16 @@ export default function Home() {
   const [isChecking, setIsChecking] = useState(false);
   const [lastAlertStatus, setLastAlertStatus] = useState<boolean | null>(null);
   const [fireAlert, setFireAlert] = useState<EmergencyAlert | null>(null);
-  const sirenPlayer = useRef<Tone.Player | null>(null);
+  
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
+  const airRaidSynth = useRef<Tone.Synth | null>(null);
+  const airRaidInterval = useRef<NodeJS.Timeout | null>(null);
+
 
    useEffect(() => {
-    sirenPlayer.current = new Tone.Player({
-        url: "https://www.myinstants.com/media/sounds/air-raid-siren.mp3",
-        autostart: false,
-        loop: true,
+    airRaidSynth.current = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.1, decay: 0.1, sustain: 1, release: 0.5 }
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
@@ -73,8 +75,11 @@ export default function Home() {
     }).toDestination();
 
     return () => {
-        sirenPlayer.current?.dispose();
+        airRaidSynth.current?.dispose();
         fireAlarmPlayer.current?.dispose();
+        if (airRaidInterval.current) {
+            clearInterval(airRaidInterval.current);
+        }
     }
   }, []);
 
@@ -111,8 +116,34 @@ export default function Home() {
   
   useInterval(checkAlerts, 60000); 
 
+  const playAirRaidSound = () => {
+    if (Tone.context.state !== 'running' || !airRaidSynth.current || airRaidInterval.current) return;
+    
+    let up = true;
+    let freq = 400; // стартова частота
+    airRaidInterval.current = setInterval(() => {
+        if (!airRaidSynth.current) return;
+        airRaidSynth.current.triggerAttack(freq);
+        if (up) {
+            freq += 20;
+            if (freq > 800) up = false;
+        } else {
+            freq -= 20;
+            if (freq < 400) up = true;
+        }
+    }, 100);
+  };
+  
+  const stopAirRaidSound = () => {
+    if (airRaidInterval.current) {
+      clearInterval(airRaidInterval.current);
+      airRaidInterval.current = null;
+    }
+    airRaidSynth.current?.triggerRelease();
+  };
+
   useEffect(() => {
-    const playSound = (player: Tone.Player | null) => {
+    const playFireSound = (player: Tone.Player | null) => {
         if (Tone.context.state !== 'running' || !player || !player.loaded) return;
         if (player.state !== 'started') {
             player.start();
@@ -120,21 +151,19 @@ export default function Home() {
     }
     
     if (fireAlert?.isActive) {
-        playSound(fireAlarmPlayer.current);
-        sirenPlayer.current?.stop();
+        stopAirRaidSound();
+        playFireSound(fireAlarmPlayer.current);
     } else {
         fireAlarmPlayer.current?.stop();
         if (alertState?.shouldAlert) {
-            // Only play if the alert just became active
             if (lastAlertStatus === false || lastAlertStatus === null) {
-                playSound(sirenPlayer.current);
+                playAirRaidSound();
             }
         } else {
-            sirenPlayer.current?.stop();
+            stopAirRaidSound();
         }
     }
     
-    // Update the last known status *after* checking it
     if (alertState) {
         setLastAlertStatus(alertState.shouldAlert);
     }
