@@ -21,8 +21,7 @@ async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
   try {
     const alerts = await getAirRaidAlerts();
     const poltavaCityAlert = alerts.find(alert => 
-        alert.location_title === 'м. Полтава' &&
-        alert.alert_type === 'air_raid'
+        alert.location_title === 'м. Полтава'
     );
     const poltavaOblastAlert = alerts.find(alert => alert.location_title === 'Полтавська область');
 
@@ -115,8 +114,8 @@ export default function Home() {
   useEffect(() => {
     const playSound = async (player: Tone.Player | null) => {
       if (Tone.context.state !== 'running' || !player) return;
-      if (player.state !== 'started') {
-        await Tone.loaded();
+      // Check if the player has loaded the buffer before starting
+      if (player.loaded && player.state !== 'started') {
         player.start();
       }
     }
@@ -127,7 +126,8 @@ export default function Home() {
     } else {
         fireAlarmPlayer.current?.stop();
         if (alertState?.shouldAlert) {
-            if (lastAlertStatus === false) { // Air raid alert just became active
+            // Only play if the alert just became active
+            if (lastAlertStatus === false) { 
                 playSound(sirenPlayer.current);
             }
         } else {
@@ -135,7 +135,10 @@ export default function Home() {
         }
     }
     
-    setLastAlertStatus(alertState?.shouldAlert ?? null);
+    // Update the last known status *after* checking it
+    if (alertState) {
+        setLastAlertStatus(alertState.shouldAlert);
+    }
 
   }, [alertState, lastAlertStatus, fireAlert]);
 
