@@ -61,9 +61,10 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
                     'onReady': (event: any) => {
                         onReady();
                         if (Tone.context.state === 'running') {
-                            event.target.unMute();
+                             event.target.unMute();
+                             // Do not mute the main destination
                         } else {
-                            event.target.mute();
+                             event.target.mute();
                         }
                         event.target.playVideo();
                     },
@@ -97,6 +98,7 @@ function YouTubePlayer({ videoId, onEnd, onReady, isActive }: { videoId: string,
 
     }, [isActive, videoId, onEnd, onReady, playerContainerId]);
     
+    if (!isActive) return null;
     return <div id={playerContainerId} className="w-full h-full"></div>;
 }
 
@@ -278,7 +280,7 @@ export default function Slideshow({ isAlertActive, fireAlert, airRaidAlert }: { 
           key={slide.id}
           className={cn(
             'absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out',
-            index === currentSlide ? 'opacity-100' : 'opacity-0'
+            index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
           )}
         >
           <Slide 

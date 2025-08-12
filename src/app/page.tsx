@@ -67,7 +67,7 @@ export default function Home() {
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
-      url: "https://www.myinstants.com/media/sounds/school-fire-alarm.mp3",
+      url: "https://www.myinstants.com/media/sounds/school-fire-alarm_1.mp3",
       autostart: false,
       loop: true,
     }).toDestination();
