@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 import { Siren, ShieldCheck } from 'lucide-react';
 import { useInterval } from '@/hooks/use-interval';
@@ -12,29 +13,29 @@ import { getAirRaidAlerts } from '@/lib/actions';
 async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
   try {
     const alerts = await getAirRaidAlerts();
-    const poltavaAlert = alerts.find(alert => 
-        alert.location_title.includes('Полтава') && 
-        !alert.location_title.includes('область') && // Exclude full oblast alerts
-        alert.alert_type === 'air_raid' // Check for air raid type
+    // Prioritize city alert over region alert
+    const poltavaCityAlert = alerts.find(alert => 
+        alert.location_title === 'м. Полтава' &&
+        alert.alert_type === 'air_raid'
     );
+     const poltavaOblastAlert = alerts.find(alert => alert.location_title === 'Полтавська область');
 
-    if (poltavaAlert) {
+    if (poltavaCityAlert) {
       // Alert is active for Poltava city
       return analyzeAirRaidAlert({
-        city: poltavaAlert.location_title,
+        city: poltavaCityAlert.location_title,
         alertStatus: true,
-        alertMessage: `Повітряна тривога в ${poltavaAlert.location_title}`,
+        alertMessage: `Повітряна тривога в ${poltavaCityAlert.location_title}`,
       });
+    } else if (poltavaOblastAlert) {
+        // Alert is active for Poltava region
+        return analyzeAirRaidAlert({
+            city: poltavaOblastAlert.location_title,
+            alertStatus: true,
+            alertMessage: `Повітряна тривога в ${poltavaOblastAlert.location_title}`,
+        });
     } else {
-      // No active alert for Poltava city
-      const poltavaOblastAlert = alerts.find(alert => alert.location_title.includes('Полтавська область'));
-      if (poltavaOblastAlert) {
-           return analyzeAirRaidAlert({
-                city: poltavaOblastAlert.location_title,
-                alertStatus: true,
-                alertMessage: `Повітряна тривога в ${poltavaOblastAlert.location_title}`,
-            });
-      }
+      // No active alert for Poltava city or region
       return { shouldAlert: false, reason: 'Відбій тривоги або відсутність загрози для Полтави.' };
     }
   } catch (error) {
@@ -48,6 +49,20 @@ export default function AirRaidAlert() {
   const [alertState, setAlertState] = useState<AirRaidAlertOutput | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [lastAlertStatus, setLastAlertStatus] = useState<boolean | null>(null);
+  const sirenPlayer = useRef<Tone.Player | null>(null);
+
+   useEffect(() => {
+    // Initialize the player only on the client side
+    sirenPlayer.current = new Tone.Player({
+        url: "https://www.myinstants.com/media/sounds/air-raid-siren.mp3",
+        autostart: false,
+        loop: true,
+    }).toDestination();
+    
+    return () => {
+        sirenPlayer.current?.dispose();
+    }
+  }, []);
 
   const checkAlerts = async () => {
     if (isChecking) return;
@@ -68,17 +83,25 @@ export default function AirRaidAlert() {
     checkAlerts();
   }, []);
   
-  // Check every 60 seconds
-  useInterval(checkAlerts, 60000); 
+  // Check every 30 seconds
+  useInterval(checkAlerts, 30000); 
 
   useEffect(() => {
-    if (alertState?.shouldAlert && !lastAlertStatus) {
-      // Alert has just become active
-      if (Tone.context.state === 'running') {
-        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
-        synth.triggerAttackRelease(['C4', 'E4', 'G#4'], '2s');
+    const playSound = async () => {
+      if (Tone.context.state !== 'running' || !sirenPlayer.current) return;
+      if (sirenPlayer.current.loaded) {
+          sirenPlayer.current.start();
       }
     }
+
+    if (alertState?.shouldAlert) {
+      if (!lastAlertStatus) { // Alert just became active
+          playSound();
+      }
+    } else {
+        sirenPlayer.current?.stop();
+    }
+
     setLastAlertStatus(alertState?.shouldAlert ?? null);
   }, [alertState, lastAlertStatus]);
 
