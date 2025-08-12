@@ -43,7 +43,8 @@ export async function logout() {
 
 export async function getPoltavaAlertStatus(): Promise<string> {
     const apiKey = process.env.ALERTS_IN_UA_API_KEY;
-    const poltavaOblastUID = '19';
+    // UID for Poltava city
+    const poltavaUID = 1060; 
 
     if (!apiKey) {
         console.error("ALERTS_IN_UA_API_KEY is not set in .env");
@@ -51,12 +52,17 @@ export async function getPoltavaAlertStatus(): Promise<string> {
     }
 
     try {
-        const response = await fetch(`https://api.alerts.in.ua/v1/iot/active_air_raid_alerts/${poltavaOblastUID}.json?token=${apiKey}`);
+        const response = await fetch(`https://api.alerts.in.ua/v1/iot/active_air_raid_alerts.json?token=${apiKey}`);
         
         if (response.ok) {
-            const status = await response.text();
-            // The API returns a plain text string like "A", "P", or "N".
-            return status;
+            const statusesString = await response.text();
+            if (statusesString.length > poltavaUID) {
+                const status = statusesString.charAt(poltavaUID);
+                // Return 'N' for space or any other unexpected character
+                return ['A', 'P'].includes(status) ? status : 'N';
+            }
+            console.error(`Statuses string is too short. Length: ${statusesString.length}, UID: ${poltavaUID}`);
+            return "N";
         } else {
              const errorBody = await response.text();
              console.error(`API call failed with status: ${response.status}`, errorBody);

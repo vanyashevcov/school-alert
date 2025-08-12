@@ -25,11 +25,15 @@ async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
     const status = await getPoltavaAlertStatus();
 
     switch (status) {
-      case 'A': //
-      case 'P': // Partial alert, we treat it as a full alert for safety
+      case 'A':
         return {
           shouldAlert: true,
-          reason: `Тривога у Полтавській області`,
+          reason: `Тривога у м. Полтава`,
+        };
+      case 'P': // Partial alert in the oblast, but we treat it as a full alert for the city for safety
+        return {
+          shouldAlert: true,
+          reason: `Часткова тривога у Полтавській області`,
         };
       case 'N':
         return {
@@ -37,7 +41,7 @@ async function checkPoltavaAlert(): Promise<AirRaidAlertOutput> {
           reason: 'Відбій тривоги',
         };
       default:
-        // This can happen if the API returns an error message or unexpected value
+        // This can happen if the API returns an error message or unexpected value like a space
         console.warn('Unexpected response from alerts API:', status);
         return { shouldAlert: false, reason: 'Помилка формату даних.' };
     }
