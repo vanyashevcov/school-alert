@@ -54,8 +54,8 @@ export async function getPoltavaAlertStatus(): Promise<string> {
         const response = await fetch(`https://api.alerts.in.ua/v1/iot/active_air_raid_alerts/${poltavaOblastUID}.json?token=${apiKey}`);
         
         if (response.ok) {
-            const status = await response.json() as string;
-            // The API returns a plain string like "A", "P", or "N". No need to process it further.
+            const status = await response.text();
+            // The API returns a plain text string like "A", "P", or "N".
             return status;
         } else {
              const errorBody = await response.text();
