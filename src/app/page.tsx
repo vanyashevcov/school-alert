@@ -40,7 +40,7 @@ export default function Home() {
     fireAlarmPlayer.current = new Tone.Player({
       url: "/signal-pojarnoy-trevogi.mp3",
       autostart: false,
-      loop: true,
+      loop: false,
     }).toDestination();
 
     return () => {
