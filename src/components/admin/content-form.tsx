@@ -18,7 +18,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Slider } from '../ui/slider';
 
 const formSchema = z.object({
-  type: z.enum(['text', 'image', 'video']),
+  type: z.enum(['text', 'image', 'video', 'image-local']),
   textType: z.enum(['normal', 'announcement', 'warning', 'urgent']).optional(),
   textAlign: z.enum(['left', 'center', 'right']).optional(),
   fontSize: z.coerce.number().min(16).max(128).optional(),
@@ -61,12 +61,19 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
   const watchFontSize = form.watch('fontSize');
 
   function onSubmit(data: ContentFormValues) {
-    const finalData: Partial<ContentFormValues> = { ...data };
+    let finalData: Partial<ContentFormValues> = { ...data };
     if (data.type !== 'text') {
         delete finalData.textType;
         delete finalData.textAlign;
         delete finalData.fontSize;
     }
+    
+    // Prepend path for local images
+    if (data.type === 'image-local') {
+        finalData.content = `/${data.content.replace(/^\//, '')}`;
+        finalData.type = 'image'; // Firestore stores it as a regular image
+    }
+
     onSave(finalData);
   }
 
@@ -108,7 +115,8 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
                     </FormControl>
                     <SelectContent>
                     <SelectItem value="text">Текст</SelectItem>
-                    <SelectItem value="image">Зображення</SelectItem>
+                    <SelectItem value="image">Зображення (URL)</SelectItem>
+                    <SelectItem value="image-local">Зображення (з папки public)</SelectItem>
                     <SelectItem value="video">Відео (YouTube)</SelectItem>
                     </SelectContent>
                 </Select>
@@ -221,6 +229,7 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
               <FormLabel>
                 {watchType === 'text' && 'Текст слайду'}
                 {watchType === 'image' && 'URL зображення'}
+                {watchType === 'image-local' && 'Назва файлу з папки /public'}
                 {watchType === 'video' && 'ID відео YouTube'}
               </FormLabel>
               <FormControl>
@@ -228,7 +237,9 @@ export function ContentForm({ slide, onSave, onCancel }: ContentFormProps) {
                   <Textarea placeholder="Введіть або згенеруйте текст..." {...field} rows={6} />
                 ) : (
                   <Input placeholder={
-                    watchType === 'image' ? 'https://...' : 'dQw4w9WgXcQ'
+                    watchType === 'image' ? 'https://...' :
+                    watchType === 'image-local' ? 'example.png' : 
+                    'dQw4w9WgXcQ'
                   } {...field} />
                 )}
               </FormControl>

@@ -18,6 +18,7 @@ const getIcon = (type: SlideContent['type']) => {
         case 'text': return <FileText className="h-5 w-5 text-muted-foreground" />;
         case 'image': return <ImageIcon className="h-5 w-5 text-muted-foreground" />;
         case 'video': return <Youtube className="h-5 w-5 text-muted-foreground" />;
+        default: return <FileText className="h-5 w-5 text-muted-foreground" />;
     }
 }
 
@@ -56,7 +57,13 @@ export default function ContentManager() {
   };
 
   const handleEdit = (slide: SlideContent) => {
-    setEditingSlide(slide);
+    // If content starts with '/', assume it's a local image for editing purposes
+    const slideForEditing = {...slide};
+    if (slide.type === 'image' && slide.content.startsWith('/')) {
+        slideForEditing.type = 'image-local' as 'image'; // Trick TS for the form
+        slideForEditing.content = slide.content.substring(1);
+    }
+    setEditingSlide(slideForEditing);
     setIsFormOpen(true);
   };
   
@@ -79,7 +86,10 @@ export default function ContentManager() {
                 <CardTitle>Слайди для показу</CardTitle>
                 <CardDescription>Додавайте, редагуйте та видаляйте контент для головного екрану.</CardDescription>
             </div>
-             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+             <Dialog open={isFormOpen} onOpenChange={(isOpen) => {
+                if (!isOpen) setEditingSlide(null);
+                 setIsFormOpen(isOpen);
+             }}>
                 <DialogTrigger asChild>
                     <Button onClick={() => setEditingSlide(null)}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Додати слайд

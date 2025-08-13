@@ -5,7 +5,7 @@ export type TextSlideType = 'normal' | 'announcement' | 'warning' | 'urgent';
 
 export type SlideContent = {
   id: string;
-  type: 'text' | 'image' | 'video';
+  type: 'text' | 'image' | 'video' | 'image-local';
   content: string;
   title?: string;
   duration: number; // in seconds

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { PlusCircle, Newspaper } from 'lucide-react';
+import { PlusCircle, Newspaper, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,21 +13,63 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
+import { generateSchoolContent } from '@/ai/flows/content-generation';
+import { Input } from '../ui/input';
+
 
 function NewsForm({ onSave, onCancel, newsItem }: { onSave: (text: string) => void, onCancel: () => void, newsItem: NewsItem | null }) {
     const [text, setText] = useState(newsItem?.text || '');
+    const [prompt, setPrompt] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const { toast } = useToast();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!text.trim()) return;
         onSave(text);
     }
+    
+    const handleGenerateContent = async () => {
+        if (!prompt.trim()) {
+            toast({ variant: 'destructive', title: 'Помилка', description: 'Будь ласка, введіть тему для генерації новини.' });
+            return;
+        }
+        setIsGenerating(true);
+        try {
+            const result = await generateSchoolContent({ prompt: `Напиши коротку новину для школи на тему: ${prompt}` });
+            if (result.content) {
+              setText(result.content);
+              toast({ title: 'Новину згенеровано!'});
+            } else {
+               toast({ variant: 'destructive', title: 'Помилка генерації', description: 'Не вдалося згенерувати контент.' });
+            }
+        } catch (error) {
+             toast({ variant: 'destructive', title: 'Помилка генерації', description: 'Сталася помилка під час звернення до AI.' });
+        } finally {
+            setIsGenerating(false);
+        }
+    }
+
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
+                <Label htmlFor="newsPrompt">Тема для генерації (AI)</Label>
+                <div className="flex gap-2">
+                    <Input id="newsPrompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Наприклад, 'шкільний ярмарок'"/>
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={handleGenerateContent}
+                        disabled={isGenerating}>
+                        {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                        <span className="hidden sm:inline ml-2">Згенерувати</span>
+                    </Button>
+                </div>
+            </div>
+            <div className="space-y-2">
                 <Label htmlFor="newsText">Текст новини</Label>
-                <Textarea id="newsText" value={text} onChange={(e) => setText(e.target.value)} placeholder="Введіть текст новини..." required />
+                <Textarea id="newsText" value={text} onChange={(e) => setText(e.target.value)} placeholder="Введіть текст новини..." required rows={5}/>
             </div>
             <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="ghost" onClick={onCancel}>Скасувати</Button>
