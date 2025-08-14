@@ -65,7 +65,7 @@ export default function Home() {
       }
       playCounter[alertId] = MAX_PLAYS; // Prevent further plays
       if (player) {
-        player.onstop = null; // Clean up the handler
+        player.onstop = () => {}; // Clean up the handler safely
       }
   };
 
