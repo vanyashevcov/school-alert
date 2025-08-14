@@ -35,20 +35,28 @@ export default function Home() {
     airRaidPlayer.current = new Tone.Player({
       url: "/Air-raid-siren.mp3",
       loop: true,
-      autostart: false,
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
       url: "/fire-alarm.mp3",
-      autostart: false,
       loop: true,
     }).toDestination();
     
     miningPlayer.current = new Tone.Player({
       url: "/mining.mp3",
-      autostart: false,
       loop: true,
     }).toDestination();
+
+    // Load all players
+    Promise.all([
+        airRaidPlayer.current.load("/Air-raid-siren.mp3"),
+        fireAlarmPlayer.current.load("/fire-alarm.mp3"),
+        miningPlayer.current.load("/mining.mp3")
+    ]).then(() => {
+        console.log("All audio files loaded.");
+    }).catch(err => {
+        console.error("Error loading audio files", err);
+    });
 
     return () => {
         airRaidPlayer.current?.dispose();
@@ -101,39 +109,33 @@ export default function Home() {
   useInterval(checkAlerts, 60000); 
 
   useEffect(() => {
-    const playSound = (player: React.MutableRefObject<Tone.Player | null>) => {
-        if (Tone.context.state === 'running' && player.current?.loaded && player.current.state !== 'started') {
-            player.current.start();
+    const playSound = (player: Tone.Player | null) => {
+        if (player?.loaded && Tone.context.state === 'running' && player.state !== 'started') {
+            player.start();
         }
     }
-    const stopSound = (player: React.MutableRefObject<Tone.Player | null>) => {
-        if (player.current?.state === 'started') {
-            player.current.stop();
+    const stopSound = (player: Tone.Player | null) => {
+        if (player?.state === 'started') {
+            player.stop();
         }
     }
 
+    // Stop all sounds initially to handle priority changes
+    stopSound(airRaidPlayer.current);
+    stopSound(fireAlarmPlayer.current);
+    stopSound(miningPlayer.current);
+
     if (miningAlert?.isActive) {
-        // Mining alert has top priority
-        stopSound(airRaidPlayer);
-        stopSound(fireAlarmPlayer);
-        playSound(miningPlayer);
+        playSound(miningPlayer.current);
     } else if (fireAlert?.isActive) {
-        // Fire alert has second priority
-        stopSound(airRaidPlayer);
-        stopSound(miningPlayer);
-        playSound(fireAlarmPlayer);
+        playSound(fireAlarmPlayer.current);
     } else if (airRaidAlert?.shouldAlert) {
-        // Air raid alert has lowest priority
-        stopSound(miningPlayer);
-        stopSound(fireAlarmPlayer);
-        if (lastAlertStatus === false || lastAlertStatus === null) {
-           playSound(airRaidPlayer);
+         if (lastAlertStatus === false || lastAlertStatus === null) {
+            playSound(airRaidPlayer.current);
+        } else {
+            // if alert is already ongoing, ensure it continues to play
+            playSound(airRaidPlayer.current);
         }
-    } else {
-        // No alerts are active, stop all sounds
-        stopSound(airRaidPlayer);
-        stopSound(fireAlarmPlayer);
-        stopSound(miningPlayer);
     }
     
     if (airRaidAlert) {
