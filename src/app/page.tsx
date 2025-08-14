@@ -63,7 +63,7 @@ export default function Home() {
       if (player?.state === 'started') {
           player.stop();
       }
-      playerCounter[alertId] = MAX_PLAYS; // Prevent further plays
+      playCounter[alertId] = MAX_PLAYS; // Prevent further plays
       if (player) {
         player.onstop = null; // Clean up the handler
       }
