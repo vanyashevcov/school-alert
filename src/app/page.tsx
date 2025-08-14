@@ -32,26 +32,29 @@ export default function Home() {
   const miningPlayer = useRef<Tone.Player | null>(null);
 
    useEffect(() => {
+    // Using absolute URLs to ensure files are found
+    const baseUrl = window.location.origin;
+    
     airRaidPlayer.current = new Tone.Player({
-      url: "/Air-raid-siren.mp3",
+      url: `${baseUrl}/Air-raid-siren.mp3`,
       loop: true,
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
-      url: "/fire-alarm.mp3",
+      url: `${baseUrl}/fire-alarm.mp3`,
       loop: true,
     }).toDestination();
     
     miningPlayer.current = new Tone.Player({
-      url: "/mining.mp3",
+      url: `${baseUrl}/mining.mp3`,
       loop: true,
     }).toDestination();
 
-    // Load all players
+    // Pre-load all players
     Promise.all([
-        airRaidPlayer.current.load("/Air-raid-siren.mp3"),
-        fireAlarmPlayer.current.load("/fire-alarm.mp3"),
-        miningPlayer.current.load("/mining.mp3")
+        airRaidPlayer.current.load(`${baseUrl}/Air-raid-siren.mp3`),
+        fireAlarmPlayer.current.load(`${baseUrl}/fire-alarm.mp3`),
+        miningPlayer.current.load(`${baseUrl}/mining.mp3`)
     ]).then(() => {
         console.log("All audio files loaded.");
     }).catch(err => {
@@ -125,24 +128,21 @@ export default function Home() {
     stopSound(fireAlarmPlayer.current);
     stopSound(miningPlayer.current);
 
+    // This logic ensures only one sound plays based on priority: mining > fire > air-raid
     if (miningAlert?.isActive) {
         playSound(miningPlayer.current);
     } else if (fireAlert?.isActive) {
         playSound(fireAlarmPlayer.current);
     } else if (airRaidAlert?.shouldAlert) {
-         if (lastAlertStatus === false || lastAlertStatus === null) {
-            playSound(airRaidPlayer.current);
-        } else {
-            // if alert is already ongoing, ensure it continues to play
-            playSound(airRaidPlayer.current);
-        }
+         playSound(airRaidPlayer.current);
     }
     
     if (airRaidAlert) {
         setLastAlertStatus(airRaidAlert.shouldAlert);
     }
 
-  }, [airRaidAlert, lastAlertStatus, fireAlert, miningAlert]);
+  }, [airRaidAlert, fireAlert, miningAlert]);
+
 
   const activeEmergencyAlert = fireAlert?.isActive ? fireAlert : (miningAlert?.isActive ? miningAlert : null);
   const isAnyAlertActive = !!activeEmergencyAlert || (airRaidAlert?.shouldAlert ?? false);
