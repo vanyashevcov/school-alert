@@ -15,12 +15,12 @@ function playSchoolBell(player: Tone.Player | null) {
     if (Tone.context.state !== 'running' || !player) return;
     
     if (player.loaded) {
+        if (player.state === 'started') {
+            player.stop();
+        }
         player.start();
     } else {
         console.log("Bell sound is not loaded yet.");
-        // Optional: play a fallback sound if the player is not ready
-        const synth = new Tone.Synth().toDestination();
-        synth.triggerAttackRelease("C5", "1s");
     }
 }
 
@@ -30,14 +30,21 @@ export default function BellSystem() {
   const bellPlayer = useRef<Tone.Player | null>(null);
 
   useEffect(() => {
-    // Initialize the player only on the client side
-    bellPlayer.current = new Tone.Player({
-        url: "https://zvukitop.com/wp-content/uploads/2021/03/zvuk-shkolnogo-zvonka-ygbb.mp3",
+    const baseUrl = window.location.origin;
+    const player = new Tone.Player({
+        url: `${baseUrl}/lesson.mp3`,
         autostart: false,
     }).toDestination();
     
+    player.load(`${baseUrl}/lesson.mp3`).then(() => {
+        bellPlayer.current = player;
+        console.log("Bell sound loaded.");
+    }).catch(err => {
+        console.error("Error loading bell sound:", err);
+    });
+    
     return () => {
-        bellPlayer.current?.dispose();
+        player?.dispose();
     }
   }, []);
 
