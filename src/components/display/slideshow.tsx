@@ -201,10 +201,14 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
   }
 }
 
-function AlertSlide({alert}: {alert: EmergencyAlert}) {
-    const config = emergencyAlertConfig[alert.id];
-    const uiConfig = textSlideConfig[config.configKey];
-    const Icon = config.icon;
+function AlertSlide({alert, title, Icon, message, configKey}: {
+  alert?: EmergencyAlert;
+  title: string;
+  Icon: React.FC<any>;
+  message: string;
+  configKey: TextSlideType;
+}) {
+    const uiConfig = textSlideConfig[configKey];
     
     return (
         <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8 animate-pulse", uiConfig.backgroundClass)}>
@@ -212,11 +216,11 @@ function AlertSlide({alert}: {alert: EmergencyAlert}) {
                 <CardHeader>
                     <div className="flex flex-col justify-center items-center gap-4">
                         <Icon className={cn("h-24 md:h-32 w-24 md:w-32 drop-shadow-lg", uiConfig.iconClass)} />
-                        <CardTitle className={cn("text-5xl md:text-8xl font-black drop-shadow-sm", uiConfig.titleClass)}>{config.title}</CardTitle>
+                        <CardTitle className={cn("text-5xl md:text-8xl font-black drop-shadow-sm", uiConfig.titleClass)}>{title}</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-6 flex flex-col justify-center">
-                    <p className="text-4xl md:text-6xl font-bold leading-tight" dangerouslySetInnerHTML={{ __html: alert.message }}></p>
+                    <p className="text-4xl md:text-6xl font-bold leading-tight" dangerouslySetInnerHTML={{ __html: message }}></p>
                 </CardContent>
             </Card>
         </div>
@@ -277,12 +281,23 @@ export default function Slideshow({ isAlertActive, activeEmergencyAlert, airRaid
   
 
   if (activeEmergencyAlert) {
-      return <AlertSlide alert={activeEmergencyAlert} />;
+      const config = emergencyAlertConfig[activeEmergencyAlert.id];
+      return <AlertSlide 
+                alert={activeEmergencyAlert}
+                title={config.title}
+                Icon={config.icon}
+                message={activeEmergencyAlert.message}
+                configKey={config.configKey}
+             />;
   }
 
   if (airRaidAlert?.shouldAlert) {
-       const airRaidEmergencyAlert: EmergencyAlert = {id: 'fireAlarm', isActive: true, message: 'Пройдіть в укриття!'};
-      return <AlertSlide alert={{id: 'fireAlarm', isActive: true, message: 'Пройдіть в укриття!'}} />
+      return <AlertSlide 
+                title="Повітряна тривога!"
+                Icon={Siren}
+                message="Пройдіть в укриття!"
+                configKey="urgent"
+             />;
   }
 
   if (slides.length === 0) {
