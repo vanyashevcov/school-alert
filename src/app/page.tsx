@@ -30,31 +30,61 @@ export default function Home() {
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
   const airRaidPlayer = useRef<Tone.Player | null>(null);
   const miningPlayer = useRef<Tone.Player | null>(null);
+  const allClearPlayer = useRef<Tone.Player | null>(null);
+
+  const playCounter = useRef<{ [key: string]: number }>({}).current;
+  const MAX_PLAYS = 3;
+
+  const playSoundRepeatedly = (player: Tone.Player | null, alertId: string) => {
+      if (!player || !player.loaded || player.state === 'started') return;
+      
+      playCounter[alertId] = 0;
+
+      const playOnce = () => {
+          if (playCounter[alertId] < MAX_PLAYS) {
+              player.start();
+              playCounter[alertId]++;
+          }
+      };
+
+      player.onstop = () => {
+          // Add a small delay before the next play to avoid overlapping sounds
+          setTimeout(() => {
+              if (playCounter[alertId] < MAX_PLAYS) {
+                  playOnce();
+              }
+          }, 500);
+      };
+      
+      playOnce();
+  };
+
+  const stopSound = (player: Tone.Player | null, alertId: string) => {
+      if (player?.state === 'started') {
+          player.stop();
+      }
+      playerCounter[alertId] = MAX_PLAYS; // Prevent further plays
+      if (player) {
+        player.onstop = null; // Clean up the handler
+      }
+  };
+
 
    useEffect(() => {
     // Using absolute URLs to ensure files are found
     const baseUrl = window.location.origin;
     
-    airRaidPlayer.current = new Tone.Player({
-      url: `${baseUrl}/Air-raid-siren.mp3`,
-      loop: false,
-    }).toDestination();
+    airRaidPlayer.current = new Tone.Player({ url: `${baseUrl}/Air-raid-siren.mp3`}).toDestination();
+    fireAlarmPlayer.current = new Tone.Player({ url: `${baseUrl}/fire-alarm.mp3`}).toDestination();
+    miningPlayer.current = new Tone.Player({ url: `${baseUrl}/mining.mp3`}).toDestination();
+    allClearPlayer.current = new Tone.Player({ url: `${baseUrl}/after-air-alert.mp3`}).toDestination();
     
-    fireAlarmPlayer.current = new Tone.Player({
-      url: `${baseUrl}/fire-alarm.mp3`,
-      loop: true,
-    }).toDestination();
-    
-    miningPlayer.current = new Tone.Player({
-      url: `${baseUrl}/mining.mp3`,
-      loop: true,
-    }).toDestination();
-
     // Pre-load all players
     Promise.all([
         airRaidPlayer.current.load(`${baseUrl}/Air-raid-siren.mp3`),
         fireAlarmPlayer.current.load(`${baseUrl}/fire-alarm.mp3`),
-        miningPlayer.current.load(`${baseUrl}/mining.mp3`)
+        miningPlayer.current.load(`${baseUrl}/mining.mp3`),
+        allClearPlayer.current.load(`${baseUrl}/after-air-alert.mp3`),
     ]).then(() => {
         console.log("All audio files loaded.");
     }).catch(err => {
@@ -65,22 +95,21 @@ export default function Home() {
         airRaidPlayer.current?.dispose();
         fireAlarmPlayer.current?.dispose();
         miningPlayer.current?.dispose();
+        allClearPlayer.current?.dispose();
     }
   }, []);
 
   useEffect(() => {
     const fireAlertDocRef = doc(db, 'emergencyAlerts', 'fireAlarm');
     const fireUnsubscribe = onSnapshot(fireAlertDocRef, (doc) => {
-      if (doc.exists()) {
-        setFireAlert(doc.data() as EmergencyAlert);
-      }
+      const data = doc.data() as EmergencyAlert | undefined;
+      setFireAlert(data || null);
     });
 
     const miningAlertDocRef = doc(db, 'emergencyAlerts', 'miningAlarm');
     const miningUnsubscribe = onSnapshot(miningAlertDocRef, (doc) => {
-      if (doc.exists()) {
-        setMiningAlert(doc.data() as EmergencyAlert);
-      }
+      const data = doc.data() as EmergencyAlert | undefined;
+      setMiningAlert(data || null);
     });
 
     return () => {
@@ -95,8 +124,20 @@ export default function Home() {
     try {
       const status = await getPoltavaAlertStatus();
       const shouldAlert = status === 'A' || status === 'P';
-      const reason = status === 'A' ? 'Тривога у м. Полтава' : 'Часткова тривога';
-      setAirRaidAlert({ shouldAlert, reason: shouldAlert ? reason : 'Відбій тривоги' });
+
+      setAirRaidAlert((prevAlert) => {
+        const newReason = status === 'A' ? 'Тривога у м. Полтава' : 'Часткова тривога';
+        
+        // Check if the alert status has just changed to "off"
+        if (prevAlert?.shouldAlert === true && shouldAlert === false) {
+           if (allClearPlayer.current?.loaded) {
+                allClearPlayer.current.start();
+           }
+        }
+        
+        return { shouldAlert, reason: shouldAlert ? newReason : 'Відбій тривоги' };
+      });
+      
     } catch (error) {
       console.error('Error fetching air raid status:', error);
       setAirRaidAlert({ shouldAlert: false, reason: 'Помилка отримання даних.' });
@@ -111,32 +152,29 @@ export default function Home() {
   
   useInterval(checkAlerts, 60000); 
 
-  useEffect(() => {
-    // This logic ensures only one sound plays based on priority: mining > fire > air-raid
-    
-    // Stop all sounds initially to handle priority changes
-    if (airRaidPlayer.current?.state === 'started') airRaidPlayer.current.stop();
-    if (fireAlarmPlayer.current?.state === 'started') fireAlarmPlayer.current.stop();
-    if (miningPlayer.current?.state === 'started') miningPlayer.current.stop();
-
+ useEffect(() => {
     const canPlay = Tone.context.state === 'running';
+    if (!canPlay) return;
 
-    if (miningAlert?.isActive) {
-        if (canPlay && miningPlayer.current?.loaded && miningPlayer.current.state !== 'started') {
-            miningPlayer.current.start();
-        }
-    } else if (fireAlert?.isActive) {
-        if (canPlay && fireAlarmPlayer.current?.loaded && fireAlarmPlayer.current.state !== 'started') {
-            fireAlarmPlayer.current.start();
-        }
-    } else if (airRaidAlert?.shouldAlert) {
-        if (canPlay && airRaidPlayer.current?.loaded && airRaidPlayer.current.state !== 'started') {
-            airRaidPlayer.current.start();
-        }
+    // Air Raid Alert
+    if (airRaidAlert?.shouldAlert) {
+      playSoundRepeatedly(airRaidPlayer.current, 'airRaid');
+    } else {
+      stopSound(airRaidPlayer.current, 'airRaid');
     }
-    
-    if (airRaidAlert) {
-        setLastAlertStatus(airRaidAlert.shouldAlert);
+
+    // Fire Alarm
+    if (fireAlert?.isActive) {
+      playSoundRepeatedly(fireAlarmPlayer.current, 'fire');
+    } else {
+      stopSound(fireAlarmPlayer.current, 'fire');
+    }
+
+    // Mining Alarm
+    if (miningAlert?.isActive) {
+      playSoundRepeatedly(miningPlayer.current, 'mining');
+    } else {
+      stopSound(miningPlayer.current, 'mining');
     }
 
   }, [airRaidAlert, fireAlert, miningAlert]);
@@ -165,3 +203,4 @@ export default function Home() {
     </div>
   );
 }
+
