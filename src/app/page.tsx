@@ -11,7 +11,7 @@ import Slideshow from '@/components/display/slideshow';
 import TimeAndDate from '@/components/display/time-and-date';
 import { useInterval } from '@/hooks/use-interval';
 import { getPoltavaAlertStatus } from '@/lib/actions';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { EmergencyAlert } from '@/lib/types';
 
@@ -25,10 +25,32 @@ export default function Home() {
   const [isChecking, setIsChecking] = useState(false);
   const [lastAlertStatus, setLastAlertStatus] = useState<boolean | null>(null);
   const [fireAlert, setFireAlert] = useState<EmergencyAlert | null>(null);
+  const [miningAlert, setMiningAlert] = useState<EmergencyAlert | null>(null);
   
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
   const airRaidPlayer = useRef<Tone.Player | null>(null);
+  const miningPlayer = useRef<Tone.Player | null>(null);
 
+  const playSound = (player: Tone.Player | null, times: number) => {
+    if (Tone.context.state !== 'running' || !player || !player.loaded) return;
+    
+    player.loop = false; // Ensure it doesn't loop infinitely on its own
+    let count = 0;
+    const playOnce = () => {
+        if (player.state !== 'started') {
+            player.start();
+        }
+    }
+    
+    player.onstop = () => {
+        count++;
+        if (count < times) {
+            playOnce();
+        }
+    };
+    
+    playOnce();
+  };
 
    useEffect(() => {
     airRaidPlayer.current = new Tone.Player({
@@ -38,7 +60,13 @@ export default function Home() {
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
-      url: "/signal-pojarnoy-trevogi.mp3",
+      url: "/fire-alarm.mp3",
+      autostart: false,
+      loop: false,
+    }).toDestination();
+    
+    miningPlayer.current = new Tone.Player({
+      url: "/mining.mp3",
       autostart: false,
       loop: false,
     }).toDestination();
@@ -46,19 +74,29 @@ export default function Home() {
     return () => {
         airRaidPlayer.current?.dispose();
         fireAlarmPlayer.current?.dispose();
+        miningPlayer.current?.dispose();
     }
   }, []);
 
   useEffect(() => {
     const fireAlertDocRef = doc(db, 'emergencyAlerts', 'fireAlarm');
-    const unsubscribe = onSnapshot(fireAlertDocRef, (doc) => {
+    const fireUnsubscribe = onSnapshot(fireAlertDocRef, (doc) => {
       if (doc.exists()) {
         setFireAlert(doc.data() as EmergencyAlert);
-      } else {
-        setFireAlert({ id: 'fireAlarm', isActive: false, message: 'Увага! Пожежна тривога! Негайно покиньте приміщення, слідуючи плану евакуації.'});
       }
     });
-    return () => unsubscribe();
+
+    const miningAlertDocRef = doc(db, 'emergencyAlerts', 'miningAlarm');
+    const miningUnsubscribe = onSnapshot(miningAlertDocRef, (doc) => {
+      if (doc.exists()) {
+        setMiningAlert(doc.data() as EmergencyAlert);
+      }
+    });
+
+    return () => {
+      fireUnsubscribe();
+      miningUnsubscribe();
+    };
   }, []);
 
   const checkAlerts = async () => {
@@ -83,46 +121,39 @@ export default function Home() {
   
   useInterval(checkAlerts, 60000); 
 
-  const playAirRaidSound = () => {
-    if (Tone.context.state !== 'running' || !airRaidPlayer.current || !airRaidPlayer.current.loaded) return;
-    if (airRaidPlayer.current.state !== 'started') {
-        airRaidPlayer.current.start();
-    }
-  };
-  
-  const stopAirRaidSound = () => {
-    airRaidPlayer.current?.stop();
-  };
-
   useEffect(() => {
-    const playFireSound = (player: Tone.Player | null) => {
-        if (Tone.context.state !== 'running' || !player || !player.loaded) return;
-        if (player.state !== 'started') {
-            player.start();
-        }
-    }
-    
-    if (fireAlert?.isActive) {
-        stopAirRaidSound();
-        playFireSound(fireAlarmPlayer.current);
-    } else {
+    if (miningAlert?.isActive) {
+        // Mining alert has top priority
+        airRaidPlayer.current?.stop();
         fireAlarmPlayer.current?.stop();
-        if (airRaidAlert?.shouldAlert) {
-            if (lastAlertStatus === false || lastAlertStatus === null) {
-                playAirRaidSound();
-            }
-        } else {
-            stopAirRaidSound();
+        playSound(miningPlayer.current, 3);
+    } else if (fireAlert?.isActive) {
+        // Fire alert has second priority
+        airRaidPlayer.current?.stop();
+        miningPlayer.current?.stop();
+        playSound(fireAlarmPlayer.current, 3);
+    } else if (airRaidAlert?.shouldAlert) {
+        // Air raid alert has lowest priority
+        miningPlayer.current?.stop();
+        fireAlarmPlayer.current?.stop();
+        if (lastAlertStatus === false || lastAlertStatus === null) {
+            playSound(airRaidPlayer.current, 3);
         }
+    } else {
+        // No alerts are active, stop all sounds
+        airRaidPlayer.current?.stop();
+        fireAlarmPlayer.current?.stop();
+        miningPlayer.current?.stop();
     }
     
     if (airRaidAlert) {
         setLastAlertStatus(airRaidAlert.shouldAlert);
     }
 
-  }, [airRaidAlert, lastAlertStatus, fireAlert]);
+  }, [airRaidAlert, lastAlertStatus, fireAlert, miningAlert]);
 
-  const isAnyAlertActive = fireAlert?.isActive || (airRaidAlert?.shouldAlert ?? false);
+  const activeEmergencyAlert = fireAlert?.isActive ? fireAlert : (miningAlert?.isActive ? miningAlert : null);
+  const isAnyAlertActive = !!activeEmergencyAlert || (airRaidAlert?.shouldAlert ?? false);
 
 
   return (
@@ -136,7 +167,7 @@ export default function Home() {
         <AirRaidAlert alertState={airRaidAlert} />
       </header>
       <main className="flex-1">
-        <Slideshow isAlertActive={isAnyAlertActive} fireAlert={fireAlert} airRaidAlert={airRaidAlert}/>
+        <Slideshow isAlertActive={isAnyAlertActive} activeEmergencyAlert={activeEmergencyAlert} airRaidAlert={airRaidAlert}/>
       </main>
       <footer className="absolute bottom-0 left-0 right-0 z-10 h-16">
         <NewsTicker />

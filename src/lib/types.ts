@@ -31,8 +31,10 @@ export type NewsItem = {
     createdAt: Timestamp;
 };
 
+export type EmergencyAlertId = 'fireAlarm' | 'miningAlarm';
+
 export type EmergencyAlert = {
-    id: 'fireAlarm';
+    id: EmergencyAlertId;
     isActive: boolean;
     message: string;
 };

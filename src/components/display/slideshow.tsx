@@ -4,13 +4,13 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { type SlideContent, type TextSlideType, type EmergencyAlert } from '@/lib/types';
+import { type SlideContent, type TextSlideType, type EmergencyAlert, type EmergencyAlertId } from '@/lib/types';
 import type { AirRaidAlertOutput } from '@/app/page';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Script from 'next/script';
 import { cn } from '@/lib/utils';
-import { Megaphone, AlertTriangle, Siren, Info, Flame } from 'lucide-react';
+import { Megaphone, AlertTriangle, Siren, Info, Flame, Bomb } from 'lucide-react';
 import * as Tone from 'tone';
 
 // Augment the window object
@@ -133,6 +133,19 @@ const textSlideConfig: Record<TextSlideType, { icon: React.FC<any>, cardClass: s
     }
 }
 
+const emergencyAlertConfig: Record<EmergencyAlertId, { title: string, icon: React.FC<any>, configKey: TextSlideType }> = {
+    fireAlarm: {
+        title: "Пожежна тривога!",
+        icon: Flame,
+        configKey: 'urgent'
+    },
+    miningAlarm: {
+        title: "Загроза мінування!",
+        icon: Bomb,
+        configKey: 'warning'
+    }
+};
+
 
 function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideContent; isActive: boolean; onVideoEnd: () => void; onVideoReady: () => void; }) {
   switch (slide.type) {
@@ -188,26 +201,29 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
   }
 }
 
-function AlertSlide({title, message, icon: Icon, configKey = 'urgent'}: {title: string, message: string, icon: React.FC<any>, configKey?: TextSlideType}) {
-    const config = textSlideConfig[configKey];
+function AlertSlide({alert}: {alert: EmergencyAlert}) {
+    const config = emergencyAlertConfig[alert.id];
+    const uiConfig = textSlideConfig[config.configKey];
+    const Icon = config.icon;
+    
     return (
-        <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8 animate-pulse", config.backgroundClass)}>
-            <Card className={cn("max-w-5xl w-full max-h-[90vh] flex flex-col border-2 shadow-2xl transition-colors duration-500 rounded-2xl", config.cardClass, "text-center")}>
+        <div className={cn("flex items-center justify-center h-full bg-gradient-to-br p-8 animate-pulse", uiConfig.backgroundClass)}>
+            <Card className={cn("max-w-5xl w-full max-h-[90vh] flex flex-col border-2 shadow-2xl transition-colors duration-500 rounded-2xl", uiConfig.cardClass, "text-center")}>
                 <CardHeader>
                     <div className="flex flex-col justify-center items-center gap-4">
-                        <Icon className={cn("h-24 md:h-32 w-24 md:w-32 drop-shadow-lg", config.iconClass)} />
-                        <CardTitle className={cn("text-5xl md:text-8xl font-black drop-shadow-sm", config.titleClass)}>{title}</CardTitle>
+                        <Icon className={cn("h-24 md:h-32 w-24 md:w-32 drop-shadow-lg", uiConfig.iconClass)} />
+                        <CardTitle className={cn("text-5xl md:text-8xl font-black drop-shadow-sm", uiConfig.titleClass)}>{config.title}</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-6 flex flex-col justify-center">
-                    <p className="text-4xl md:text-6xl font-bold leading-tight" dangerouslySetInnerHTML={{ __html: message }}></p>
+                    <p className="text-4xl md:text-6xl font-bold leading-tight" dangerouslySetInnerHTML={{ __html: alert.message }}></p>
                 </CardContent>
             </Card>
         </div>
     )
 }
 
-export default function Slideshow({ isAlertActive, fireAlert, airRaidAlert }: { isAlertActive: boolean; fireAlert: EmergencyAlert | null; airRaidAlert: AirRaidAlertOutput | null }) {
+export default function Slideshow({ isAlertActive, activeEmergencyAlert, airRaidAlert }: { isAlertActive: boolean; activeEmergencyAlert: EmergencyAlert | null; airRaidAlert: AirRaidAlertOutput | null }) {
   const [slides, setSlides] = useState<SlideContent[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -260,12 +276,13 @@ export default function Slideshow({ isAlertActive, fireAlert, airRaidAlert }: { 
   }, [currentSlide, slides, isAlertActive]);
   
 
-  if (fireAlert?.isActive) {
-      return <AlertSlide title="Пожежна тривога!" message={fireAlert.message} icon={Flame} configKey="urgent" />;
+  if (activeEmergencyAlert) {
+      return <AlertSlide alert={activeEmergencyAlert} />;
   }
 
   if (airRaidAlert?.shouldAlert) {
-      return <AlertSlide title="Повітряна тривога!" message="Пройдіть в укриття!" icon={Siren} configKey="urgent" />;
+       const airRaidEmergencyAlert: EmergencyAlert = {id: 'fireAlarm', isActive: true, message: 'Пройдіть в укриття!'};
+      return <AlertSlide alert={{id: 'fireAlarm', isActive: true, message: 'Пройдіть в укриття!'}} />
   }
 
   if (slides.length === 0) {
