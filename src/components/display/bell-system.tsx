@@ -24,7 +24,7 @@ function playSchoolBell(player: Tone.Player | null) {
     }
 }
 
-export default function BellSystem() {
+export default function BellSystem({ onBellRing }: { onBellRing: (message: string) => void }) {
   const [schedule, setSchedule] = useState<LessonTime[]>([]);
   const [lastPlayed, setLastPlayed] = useState<string | null>(null);
   const bellPlayer = useRef<Tone.Player | null>(null);
@@ -82,13 +82,22 @@ export default function BellSystem() {
     const shouldPlay = schedule.find(item => item.startTime === currentTime || item.endTime === currentTime);
 
     if (shouldPlay && lastPlayed !== currentTime) {
-      const isStart = shouldPlay.startTime === currentTime;
-      const label = isStart ? `Початок уроку ${shouldPlay.lessonNumber}` : `Кінець уроку ${shouldPlay.lessonNumber}`;
-      console.log(`Playing bell for ${label} at ${currentTime}`);
-      
       playSchoolBell(bellPlayer.current);
-
       setLastPlayed(currentTime);
+
+      const isStart = shouldPlay.startTime === currentTime;
+      if (!isStart) { // If it's the end of a lesson
+        const currentLessonIndex = schedule.findIndex(item => item.id === shouldPlay.id);
+        const nextLesson = schedule[currentLessonIndex + 1];
+        
+        let message = `Закінчився ${shouldPlay.lessonNumber} урок.`;
+        if (nextLesson) {
+            message += ` Наступний урок ${nextLesson.lessonNumber} о ${nextLesson.startTime}.`;
+        } else {
+            message += ` Уроки на сьогодні закінчено.`;
+        }
+        onBellRing(message);
+      }
     }
   }, 1000); // Check every second to be precise
 

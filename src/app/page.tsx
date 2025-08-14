@@ -14,6 +14,7 @@ import { getPoltavaAlertStatus } from '@/lib/actions';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { EmergencyAlert } from '@/lib/types';
+import BellNotification from '@/components/display/bell-notification';
 
 export interface AirRaidAlertOutput {
   shouldAlert: boolean;
@@ -26,6 +27,7 @@ export default function Home() {
   const [lastAlertStatus, setLastAlertStatus] = useState<boolean | null>(null);
   const [fireAlert, setFireAlert] = useState<EmergencyAlert | null>(null);
   const [miningAlert, setMiningAlert] = useState<EmergencyAlert | null>(null);
+  const [bellNotification, setBellNotification] = useState<string | null>(null);
   
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
   const airRaidPlayer = useRef<Tone.Player | null>(null);
@@ -187,11 +189,18 @@ export default function Home() {
   const activeEmergencyAlert = fireAlert?.isActive ? fireAlert : (miningAlert?.isActive ? miningAlert : null);
   const isAnyAlertActive = !!activeEmergencyAlert || (airRaidAlert?.shouldAlert ?? false);
 
+  const handleBellNotification = (message: string) => {
+    setBellNotification(message);
+    setTimeout(() => setBellNotification(null), 15000); // Hide after 15 seconds
+  };
+
 
   return (
     <div className="relative flex h-full w-full flex-col">
       <AudioEnabler />
-      <BellSystem />
+      <BellSystem onBellRing={handleBellNotification} />
+      <BellNotification message={bellNotification} />
+
       <header className="absolute top-4 left-4 right-4 z-10 flex items-start justify-between">
         <div className="bg-black/20 p-4 rounded-lg">
           <TimeAndDate />
@@ -207,5 +216,3 @@ export default function Home() {
     </div>
   );
 }
-
-
