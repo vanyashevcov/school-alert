@@ -31,43 +31,23 @@ export default function Home() {
   const airRaidPlayer = useRef<Tone.Player | null>(null);
   const miningPlayer = useRef<Tone.Player | null>(null);
 
-  const playSound = (player: Tone.Player | null, times: number) => {
-    if (Tone.context.state !== 'running' || !player || !player.loaded) return;
-
-    let count = 0;
-    const playOnce = () => {
-        if (player.state !== 'started') {
-            player.start();
-        }
-    };
-    
-    player.loop = false;
-    player.onstop = () => {
-        count++;
-        if (count < times) {
-            playOnce();
-        }
-    };
-    playOnce();
-  };
-
    useEffect(() => {
     airRaidPlayer.current = new Tone.Player({
       url: "/Air-raid-siren.mp3",
-      loop: false,
+      loop: true,
       autostart: false,
     }).toDestination();
     
     fireAlarmPlayer.current = new Tone.Player({
       url: "/fire-alarm.mp3",
       autostart: false,
-      loop: false,
+      loop: true,
     }).toDestination();
     
     miningPlayer.current = new Tone.Player({
       url: "/mining.mp3",
       autostart: false,
-      loop: false,
+      loop: true,
     }).toDestination();
 
     return () => {
@@ -121,28 +101,39 @@ export default function Home() {
   useInterval(checkAlerts, 60000); 
 
   useEffect(() => {
+    const playSound = (player: React.MutableRefObject<Tone.Player | null>) => {
+        if (Tone.context.state === 'running' && player.current?.loaded && player.current.state !== 'started') {
+            player.current.start();
+        }
+    }
+    const stopSound = (player: React.MutableRefObject<Tone.Player | null>) => {
+        if (player.current?.state === 'started') {
+            player.current.stop();
+        }
+    }
+
     if (miningAlert?.isActive) {
         // Mining alert has top priority
-        airRaidPlayer.current?.stop();
-        fireAlarmPlayer.current?.stop();
-        playSound(miningPlayer.current, 3);
+        stopSound(airRaidPlayer);
+        stopSound(fireAlarmPlayer);
+        playSound(miningPlayer);
     } else if (fireAlert?.isActive) {
         // Fire alert has second priority
-        airRaidPlayer.current?.stop();
-        miningPlayer.current?.stop();
-        playSound(fireAlarmPlayer.current, 3);
+        stopSound(airRaidPlayer);
+        stopSound(miningPlayer);
+        playSound(fireAlarmPlayer);
     } else if (airRaidAlert?.shouldAlert) {
         // Air raid alert has lowest priority
-        miningPlayer.current?.stop();
-        fireAlarmPlayer.current?.stop();
+        stopSound(miningPlayer);
+        stopSound(fireAlarmPlayer);
         if (lastAlertStatus === false || lastAlertStatus === null) {
-            playSound(airRaidPlayer.current, 3);
+           playSound(airRaidPlayer);
         }
     } else {
         // No alerts are active, stop all sounds
-        airRaidPlayer.current?.stop();
-        fireAlarmPlayer.current?.stop();
-        miningPlayer.current?.stop();
+        stopSound(airRaidPlayer);
+        stopSound(fireAlarmPlayer);
+        stopSound(miningPlayer);
     }
     
     if (airRaidAlert) {
