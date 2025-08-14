@@ -32,24 +32,38 @@ export default function Home() {
   const miningPlayer = useRef<Tone.Player | null>(null);
 
   const playSound = (player: Tone.Player | null, times: number) => {
-    if (Tone.context.state !== 'running' || !player || !player.loaded) return;
-    
-    player.loop = false; // Ensure it doesn't loop infinitely on its own
-    let count = 0;
+    if (Tone.context.state !== 'running' || !player) return;
+
     const playOnce = () => {
         if (player.state !== 'started') {
             player.start();
         }
-    }
-    
-    player.onstop = () => {
-        count++;
-        if (count < times) {
-            playOnce();
-        }
     };
-    
-    playOnce();
+
+    if (!player.loaded) {
+        player.toDestination();
+        Tone.loaded().then(() => {
+            player.loop = false; 
+            let count = 0;
+            player.onstop = () => {
+                count++;
+                if (count < times) {
+                    playOnce();
+                }
+            };
+            playOnce();
+        });
+    } else {
+        player.loop = false;
+        let count = 0;
+        player.onstop = () => {
+            count++;
+            if (count < times) {
+                playOnce();
+            }
+        };
+        playOnce();
+    }
   };
 
    useEffect(() => {
