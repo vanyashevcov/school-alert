@@ -112,29 +112,27 @@ export default function Home() {
   useInterval(checkAlerts, 60000); 
 
   useEffect(() => {
-    const playSound = (player: Tone.Player | null) => {
-        if (player?.loaded && Tone.context.state === 'running' && player.state !== 'started') {
-            player.start();
-        }
-    }
-    const stopSound = (player: Tone.Player | null) => {
-        if (player?.state === 'started') {
-            player.stop();
-        }
-    }
-
-    // Stop all sounds initially to handle priority changes
-    stopSound(airRaidPlayer.current);
-    stopSound(fireAlarmPlayer.current);
-    stopSound(miningPlayer.current);
-
     // This logic ensures only one sound plays based on priority: mining > fire > air-raid
+    
+    // Stop all sounds initially to handle priority changes
+    if (airRaidPlayer.current?.state === 'started') airRaidPlayer.current.stop();
+    if (fireAlarmPlayer.current?.state === 'started') fireAlarmPlayer.current.stop();
+    if (miningPlayer.current?.state === 'started') miningPlayer.current.stop();
+
+    const canPlay = Tone.context.state === 'running';
+
     if (miningAlert?.isActive) {
-        playSound(miningPlayer.current);
+        if (canPlay && miningPlayer.current?.loaded && miningPlayer.current.state !== 'started') {
+            miningPlayer.current.start();
+        }
     } else if (fireAlert?.isActive) {
-        playSound(fireAlarmPlayer.current);
+        if (canPlay && fireAlarmPlayer.current?.loaded && fireAlarmPlayer.current.state !== 'started') {
+            fireAlarmPlayer.current.start();
+        }
     } else if (airRaidAlert?.shouldAlert) {
-         playSound(airRaidPlayer.current);
+        if (canPlay && airRaidPlayer.current?.loaded && airRaidPlayer.current.state !== 'started') {
+            airRaidPlayer.current.start();
+        }
     }
     
     if (airRaidAlert) {
