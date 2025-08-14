@@ -11,7 +11,7 @@ import Slideshow from '@/components/display/slideshow';
 import TimeAndDate from '@/components/display/time-and-date';
 import { useInterval } from '@/hooks/use-interval';
 import { getPoltavaAlertStatus } from '@/lib/actions';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { EmergencyAlert } from '@/lib/types';
 
