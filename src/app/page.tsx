@@ -156,10 +156,14 @@ export default function Home() {
     const canPlay = Tone.context.state === 'running';
     if (!canPlay) return;
 
-    // Air Raid Alert
-    if (airRaidAlert?.shouldAlert) {
+    const isEmergencyActive = fireAlert?.isActive || miningAlert?.isActive;
+
+    // Air Raid Alert Logic
+    if (airRaidAlert?.shouldAlert && !isEmergencyActive) {
+      // Play air raid only if no emergency alert is active
       playSoundRepeatedly(airRaidPlayer.current, 'airRaid');
     } else {
+      // Stop air raid if it shouldn't be alerting OR if an emergency alert is active
       stopSound(airRaidPlayer.current, 'airRaid');
     }
 
@@ -203,4 +207,5 @@ export default function Home() {
     </div>
   );
 }
+
 
