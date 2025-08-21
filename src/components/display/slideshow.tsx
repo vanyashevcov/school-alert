@@ -155,7 +155,7 @@ function Slide({ slide, onVideoEnd, onVideoReady, isActive }: { slide: SlideCont
           src={slide.content}
           alt={slide.title || 'Зображення для слайду'}
           fill
-          className="object-contain h-full"
+          className="object-cover w-full h-full"
           data-ai-hint="school life"
         />
       );
