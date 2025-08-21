@@ -38,3 +38,7 @@ export type EmergencyAlert = {
     isActive: boolean;
     message: string;
 };
+
+export type VideoSettings = {
+    isActive: boolean;
+}

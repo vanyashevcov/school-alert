@@ -2,13 +2,17 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-interface MorningVideoPlayerProps {
-    onVideoEnd: () => void;
-}
-
-export default function MorningVideoPlayer({ onVideoEnd }: MorningVideoPlayerProps) {
+export default function MorningVideoPlayer() {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
+
+    const handleVideoEnd = () => {
+        // Automatically turn off the video in Firestore when it ends
+        setDoc(videoSettingsDocRef, { isActive: false }, { merge: true });
+    };
 
     useEffect(() => {
         // Ensure video is unmuted if audio context is running
@@ -23,7 +27,7 @@ export default function MorningVideoPlayer({ onVideoEnd }: MorningVideoPlayerPro
                 ref={videoRef}
                 src="/video.mp4"
                 autoPlay
-                onEnded={onVideoEnd}
+                onEnded={handleVideoEnd}
                 className="w-full h-full object-cover"
             />
         </div>

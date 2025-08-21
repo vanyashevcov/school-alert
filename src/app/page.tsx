@@ -13,7 +13,7 @@ import { useInterval } from '@/hooks/use-interval';
 import { getPoltavaAlertStatus } from '@/lib/actions';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { EmergencyAlert } from '@/lib/types';
+import type { EmergencyAlert, VideoSettings } from '@/lib/types';
 import BellNotification from '@/components/display/bell-notification';
 import MorningVideoPlayer from '@/components/display/morning-video-player';
 
@@ -29,7 +29,7 @@ export default function Home() {
   const [fireAlert, setFireAlert] = useState<EmergencyAlert | null>(null);
   const [miningAlert, setMiningAlert] = useState<EmergencyAlert | null>(null);
   const [bellNotification, setBellNotification] = useState<string | null>(null);
-  const [showMorningVideo, setShowMorningVideo] = useState(false);
+  const [videoSettings, setVideoSettings] = useState<VideoSettings | null>(null);
   
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
   const airRaidPlayer = useRef<Tone.Player | null>(null);
@@ -116,9 +116,16 @@ export default function Home() {
       setMiningAlert(data || null);
     });
 
+    const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
+    const videoUnsubscribe = onSnapshot(videoSettingsDocRef, (doc) => {
+        const data = doc.data() as VideoSettings | undefined;
+        setVideoSettings(data || null);
+    });
+
     return () => {
       fireUnsubscribe();
       miningUnsubscribe();
+      videoUnsubscribe();
     };
   }, []);
 
@@ -187,17 +194,6 @@ export default function Home() {
 
   }, [airRaidAlert, fireAlert, miningAlert]);
 
-  // Check time for morning video
-  useInterval(() => {
-    const now = new Date();
-    if (now.getHours() === 9 && now.getMinutes() === 0) {
-        // Only trigger if it's not already showing
-        if (!showMorningVideo) {
-            setShowMorningVideo(true);
-        }
-    }
-  }, 60000); // Check every minute
-
 
   const activeEmergencyAlert = fireAlert?.isActive ? fireAlert : (miningAlert?.isActive ? miningAlert : null);
   const isAnyAlertActive = !!activeEmergencyAlert || (airRaidAlert?.shouldAlert ?? false);
@@ -213,7 +209,7 @@ export default function Home() {
       <AudioEnabler />
       <BellSystem onBellRing={handleBellNotification} />
       <BellNotification message={bellNotification} />
-      {showMorningVideo && <MorningVideoPlayer onVideoEnd={() => setShowMorningVideo(false)} />}
+      {videoSettings?.isActive && <MorningVideoPlayer />}
 
 
       <header className="absolute top-4 left-4 right-4 z-10 flex items-start justify-between">
