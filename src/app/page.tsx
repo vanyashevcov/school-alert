@@ -11,11 +11,12 @@ import Slideshow from '@/components/display/slideshow';
 import TimeAndDate from '@/components/display/time-and-date';
 import { useInterval } from '@/hooks/use-interval';
 import { getPoltavaAlertStatus } from '@/lib/actions';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { EmergencyAlert, VideoSettings } from '@/lib/types';
 import BellNotification from '@/components/display/bell-notification';
 import MorningVideoPlayer from '@/components/display/morning-video-player';
+import { format } from 'date-fns';
 
 export interface AirRaidAlertOutput {
   shouldAlert: boolean;
@@ -30,7 +31,8 @@ export default function Home() {
   const [miningAlert, setMiningAlert] = useState<EmergencyAlert | null>(null);
   const [bellNotification, setBellNotification] = useState<string | null>(null);
   const [videoSettings, setVideoSettings] = useState<VideoSettings | null>(null);
-  
+  const [hasPlayedToday, setHasPlayedToday] = useState(false);
+
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
   const airRaidPlayer = useRef<Tone.Player | null>(null);
   const miningPlayer = useRef<Tone.Player | null>(null);
@@ -41,7 +43,7 @@ export default function Home() {
 
   const playSoundRepeatedly = (player: Tone.Player | null, alertId: string) => {
       if (!player || !player.loaded || player.state === 'started') return;
-      
+
       playCounter[alertId] = 0;
 
       const playOnce = () => {
@@ -59,7 +61,7 @@ export default function Home() {
               }
           }, 500);
       };
-      
+
       playOnce();
   };
 
@@ -77,12 +79,12 @@ export default function Home() {
    useEffect(() => {
     // Using absolute URLs to ensure files are found
     const baseUrl = window.location.origin;
-    
+
     airRaidPlayer.current = new Tone.Player({ url: `${baseUrl}/Air-raid-siren.mp3`}).toDestination();
     fireAlarmPlayer.current = new Tone.Player({ url: `${baseUrl}/fire-alarm.mp3`}).toDestination();
     miningPlayer.current = new Tone.Player({ url: `${baseUrl}/mining.mp3`}).toDestination();
     allClearPlayer.current = new Tone.Player({ url: `${baseUrl}/after-air-alert.mp3`}).toDestination();
-    
+
     // Pre-load all players
     Promise.all([
         airRaidPlayer.current.load(`${baseUrl}/Air-raid-siren.mp3`),
@@ -138,17 +140,17 @@ export default function Home() {
 
       setAirRaidAlert((prevAlert) => {
         const newReason = status === 'A' ? 'Тривога у м. Полтава' : 'Часткова тривога';
-        
+
         // Check if the alert status has just changed to "off"
         if (prevAlert?.shouldAlert === true && shouldAlert === false) {
            if (allClearPlayer.current?.loaded) {
                 allClearPlayer.current.start();
            }
         }
-        
+
         return { shouldAlert, reason: shouldAlert ? newReason : 'Відбій тривоги' };
       });
-      
+
     } catch (error) {
       console.error('Error fetching air raid status:', error);
       setAirRaidAlert({ shouldAlert: false, reason: 'Помилка отримання даних.' });
@@ -156,12 +158,12 @@ export default function Home() {
       setIsChecking(false);
     }
   };
-  
+
   useEffect(() => {
     checkAlerts();
   }, []);
-  
-  useInterval(checkAlerts, 60000); 
+
+  useInterval(checkAlerts, 60000);
 
  useEffect(() => {
     const canPlay = Tone.context.state === 'running';
@@ -193,6 +195,24 @@ export default function Home() {
     }
 
   }, [airRaidAlert, fireAlert, miningAlert]);
+
+  // Scheduled Video Logic
+  useInterval(() => {
+    if (videoSettings?.isScheduled && videoSettings.scheduledTime && !videoSettings.isActive) {
+        const now = new Date();
+        const currentTime = format(now, 'HH:mm');
+        
+        if (currentTime === '00:00') {
+            setHasPlayedToday(false);
+        }
+
+        if (currentTime === videoSettings.scheduledTime && !hasPlayedToday) {
+            const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
+            setDoc(videoSettingsDocRef, { isActive: true }, { merge: true });
+            setHasPlayedToday(true);
+        }
+    }
+  }, 60000); // Check every minute
 
 
   const activeEmergencyAlert = fireAlert?.isActive ? fireAlert : (miningAlert?.isActive ? miningAlert : null);

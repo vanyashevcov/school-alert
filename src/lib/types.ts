@@ -41,4 +41,6 @@ export type EmergencyAlert = {
 
 export type VideoSettings = {
     isActive: boolean;
+    isScheduled?: boolean;
+    scheduledTime?: string; // "HH:mm"
 }
