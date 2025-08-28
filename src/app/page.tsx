@@ -32,6 +32,7 @@ export default function Home() {
   const [videoSettings, setVideoSettings] = useState<VideoSettings | null>(null);
   const [hasPlayedToday, setHasPlayedToday] = useState(false);
   const prevAirRaidStatus = useRef<boolean | null>(null);
+  const initialAlertCheckDone = useRef(false);
 
   const fireAlarmPlayer = useRef<Tone.Player | null>(null);
   const airRaidPlayer = useRef<Tone.Player | null>(null);
@@ -155,15 +156,18 @@ export default function Home() {
                 allClearPlayer.current.start();
            }
         }
-
+        
         return { shouldAlert, reason: shouldAlert ? newReason : 'Відбій тривоги' };
       });
-
+      
     } catch (error) {
       console.error('Error fetching air raid status:', error);
       setAirRaidAlert({ shouldAlert: false, reason: 'Помилка отримання даних.' });
     } finally {
       setIsChecking(false);
+      if (!initialAlertCheckDone.current) {
+        initialAlertCheckDone.current = true;
+      }
     }
   };
 
@@ -200,18 +204,29 @@ export default function Home() {
 
   }, [airRaidAlert?.shouldAlert, fireAlert, miningAlert, areSoundsLoaded]);
 
-  // This separate effect handles the *start* of an air raid alert to play the sound only once.
+  // This separate effect handles the *start* of an air raid alert.
   useEffect(() => {
     const isEmergencyActive = fireAlert?.isActive || miningAlert?.isActive;
-    const justStarted = airRaidAlert?.shouldAlert === true && prevAirRaidStatus.current === false;
-    
-    if (justStarted && !isEmergencyActive) {
+
+    if (airRaidAlert?.shouldAlert && !isEmergencyActive) {
+      // Case 1: The page loads and the alert is already active.
+      // `prevAirRaidStatus.current` is null initially.
+      const isInitialLoadWithAlert = prevAirRaidStatus.current === null && initialAlertCheckDone.current;
+      
+      // Case 2: The alert starts while the user is on the page.
+      const justStarted = prevAirRaidStatus.current === false;
+
+      if (isInitialLoadWithAlert || justStarted) {
         playSoundRepeatedly(airRaidPlayer.current, 'airRaid');
+      }
     }
     
-    prevAirRaidStatus.current = airRaidAlert?.shouldAlert ?? null;
+    // Update previous status only after the first check is complete
+    if (initialAlertCheckDone.current) {
+      prevAirRaidStatus.current = airRaidAlert?.shouldAlert ?? null;
+    }
 
-  }, [airRaidAlert?.shouldAlert, fireAlert?.isActive, miningAlert?.isActive, areSoundsLoaded]);
+  }, [airRaidAlert?.shouldAlert, fireAlert?.isActive, miningAlert?.isActive, areSoundsLoaded, initialAlertCheckDone.current]);
 
   // Scheduled Video Logic
   useInterval(() => {
