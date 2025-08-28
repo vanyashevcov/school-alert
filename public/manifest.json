@@ -1,0 +1,22 @@
+
+{
+  "name": "School Hub Display",
+  "short_name": "School Hub",
+  "description": "A central display for school information and alerts.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2E3A87",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

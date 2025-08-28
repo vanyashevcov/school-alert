@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -5,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: 'School Hub Display',
   description: 'A central display for school information and alerts.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
