@@ -114,7 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-            <main className="flex-1 bg-background">{children}</main>
+            <main className="flex-1 bg-background h-screen overflow-y-auto">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

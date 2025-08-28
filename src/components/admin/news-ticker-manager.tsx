@@ -132,7 +132,7 @@ export default function NewsTickerManager() {
 
   return (
     <Card className="h-full border-0 rounded-none shadow-none flex flex-col">
-      <CardHeader>
+      <CardHeader className="px-0">
         <div className="flex justify-between items-start">
             <div>
                 <CardDescription>Керуйте новинами, що відображаються у біжучому рядку.</CardDescription>
@@ -162,36 +162,38 @@ export default function NewsTickerManager() {
             </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="flex-1">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Текст новини</TableHead>
-              <TableHead className="text-right">Дії</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {news.length > 0 ? (
-                news.map(item => (
-                <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                        <p className="truncate max-w-lg">{item.text}</p>
-                    </TableCell>
-                    <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>Видалити</Button>
-                    </TableCell>
-                </TableRow>
-                ))
-            ) : (
-                <TableRow>
-                    <TableCell colSpan={2} className="h-24 text-center">
-                       Новин ще немає. Додайте першу!
-                    </TableCell>
-                </TableRow>
-            )}
-          </TableBody>
-        </Table>
+      <CardContent className="flex-1 px-0 overflow-hidden">
+        <div className="h-full overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Текст новини</TableHead>
+                <TableHead className="text-right">Дії</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {news.length > 0 ? (
+                  news.map(item => (
+                  <TableRow key={item.id}>
+                      <TableCell className="font-medium">
+                          <p className="truncate max-w-lg">{item.text}</p>
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>Видалити</Button>
+                      </TableCell>
+                  </TableRow>
+                  ))
+              ) : (
+                  <TableRow>
+                      <TableCell colSpan={2} className="h-24 text-center">
+                         Новин ще немає. Додайте першу!
+                      </TableCell>
+                  </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

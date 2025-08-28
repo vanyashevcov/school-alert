@@ -121,8 +121,8 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
   }
 
   return (
-    <Card className="border-0 border-t rounded-none shadow-none">
-        <CardHeader className="flex flex-row justify-between items-center">
+    <Card className="border-0 shadow-none">
+        <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center px-0">
             <div>
                 <CardTitle>{label}</CardTitle>
                 <CardDescription>Розклад для цього дня.</CardDescription>
@@ -132,7 +132,7 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                 setIsFormOpen(isOpen);
              }}>
                 <DialogTrigger asChild>
-                    <Button onClick={() => setEditingTime(null)}>
+                    <Button onClick={() => setEditingTime(null)} className="mt-4 md:mt-0">
                         <PlusCircle className="mr-2 h-4 w-4" /> Додати урок
                     </Button>
                 </DialogTrigger>
@@ -152,7 +152,8 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                 </DialogContent>
             </Dialog>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -168,7 +169,7 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                     <TableCell className="font-medium">{item.lessonNumber}</TableCell>
                     <TableCell className="font-mono">{item.startTime}</TableCell>
                     <TableCell className="font-mono">{item.endTime}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right whitespace-nowrap">
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
                        <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -196,6 +197,7 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                 )}
               </TableBody>
             </Table>
+          </div>
         </CardContent>
     </Card>
   )
@@ -207,13 +209,15 @@ export default function BellScheduleManager() {
   return (
     <div className="h-full flex flex-col">
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DayOfWeek)} className="w-full flex-1 flex flex-col">
-            <TabsList>
-                {daysOfWeek.map(({ value, label }) => (
-                    <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
-                ))}
-            </TabsList>
+            <div className="overflow-x-auto">
+              <TabsList className="inline-flex">
+                  {daysOfWeek.map(({ value, label }) => (
+                      <TabsTrigger key={value} value={value}>{label}</TabsTrigger>
+                  ))}
+              </TabsList>
+            </div>
             {daysOfWeek.map(({ value, label }) => (
-                <TabsContent key={value} value={value} className="m-0 flex-1">
+                <TabsContent key={value} value={value} className="m-0 flex-1 py-4">
                     <DailySchedule day={value} label={label} />
                 </TabsContent>
             ))}
