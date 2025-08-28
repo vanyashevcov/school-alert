@@ -121,7 +121,7 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
   }
 
   return (
-    <Card className="border-0 shadow-none">
+    <Card className="border-0 shadow-none h-full flex flex-col">
         <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center px-0">
             <div>
                 <CardTitle>{label}</CardTitle>
@@ -152,52 +152,50 @@ function DailySchedule({ day, label }: { day: DayOfWeek, label: string }) {
                 </DialogContent>
             </Dialog>
         </CardHeader>
-        <CardContent className="px-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Урок №</TableHead>
-                  <TableHead>Початок</TableHead>
-                  <TableHead>Кінець</TableHead>
-                  <TableHead className="text-right">Дії</TableHead>
+        <CardContent className="px-0 flex-1 overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Урок №</TableHead>
+                <TableHead>Початок</TableHead>
+                <TableHead>Кінець</TableHead>
+                <TableHead className="text-right">Дії</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {schedule.length > 0 ? schedule.map(item => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.lessonNumber}</TableCell>
+                  <TableCell className="font-mono">{item.startTime}</TableCell>
+                  <TableCell className="font-mono">{item.endTime}</TableCell>
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
+                     <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                         <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">Видалити</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Ви впевнені?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Цю дію неможливо скасувати. Це назавжди видалить запис з розкладу.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(item.id)}>Видалити</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {schedule.length > 0 ? schedule.map(item => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.lessonNumber}</TableCell>
-                    <TableCell className="font-mono">{item.startTime}</TableCell>
-                    <TableCell className="font-mono">{item.endTime}</TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
-                       <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">Видалити</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Ви впевнені?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Цю дію неможливо скасувати. Це назавжди видалить запис з розкладу.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Скасувати</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(item.id)}>Видалити</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
+              )) : (
+                  <TableRow>
+                      <TableCell colSpan={4} className="text-center h-24">Розклад для цього дня порожній.</TableCell>
                   </TableRow>
-                )) : (
-                    <TableRow>
-                        <TableCell colSpan={4} className="text-center h-24">Розклад для цього дня порожній.</TableCell>
-                    </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
     </Card>
   )
@@ -217,7 +215,7 @@ export default function BellScheduleManager() {
               </TabsList>
             </div>
             {daysOfWeek.map(({ value, label }) => (
-                <TabsContent key={value} value={value} className="m-0 flex-1 py-4">
+                <TabsContent key={value} value={value} className="m-0 flex-1 py-4 overflow-hidden">
                     <DailySchedule day={value} label={label} />
                 </TabsContent>
             ))}

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { PlusCircle, Newspaper, Sparkles, Loader2 } from 'lucide-react';
+import { PlusCircle, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -162,38 +162,36 @@ export default function NewsTickerManager() {
             </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 px-0 overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Текст новини</TableHead>
-                <TableHead className="text-right">Дії</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {news.length > 0 ? (
-                  news.map(item => (
-                  <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                          <p className="truncate max-w-lg">{item.text}</p>
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>Видалити</Button>
-                      </TableCell>
-                  </TableRow>
-                  ))
-              ) : (
-                  <TableRow>
-                      <TableCell colSpan={2} className="h-24 text-center">
-                         Новин ще немає. Додайте першу!
-                      </TableCell>
-                  </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+      <CardContent className="flex-1 px-0 overflow-y-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Текст новини</TableHead>
+              <TableHead className="text-right">Дії</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {news.length > 0 ? (
+                news.map(item => (
+                <TableRow key={item.id}>
+                    <TableCell className="font-medium">
+                        <p className="truncate max-w-lg">{item.text}</p>
+                    </TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>Видалити</Button>
+                    </TableCell>
+                </TableRow>
+                ))
+            ) : (
+                <TableRow>
+                    <TableCell colSpan={2} className="h-24 text-center">
+                       Новин ще немає. Додайте першу!
+                    </TableCell>
+                </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
