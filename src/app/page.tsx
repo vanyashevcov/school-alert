@@ -26,7 +26,6 @@ export interface AirRaidAlertOutput {
 export default function Home() {
   const [airRaidAlert, setAirRaidAlert] = useState<AirRaidAlertOutput | null>(null);
   const [isChecking, setIsChecking] = useState(false);
-  const [lastAlertStatus, setLastAlertStatus] = useState<boolean | null>(null);
   const [fireAlert, setFireAlert] = useState<EmergencyAlert | null>(null);
   const [miningAlert, setMiningAlert] = useState<EmergencyAlert | null>(null);
   const [bellNotification, setBellNotification] = useState<string | null>(null);
@@ -95,6 +94,7 @@ export default function Home() {
             const allClearBuffer = await new Tone.Buffer(`${baseUrl}/after-air-alert.mp3`);
             allClearPlayer.current = new Tone.Player(allClearBuffer).toDestination();
             
+            await Tone.loaded();
             setAreSoundsLoaded(true);
             console.log("All audio files pre-loaded into buffers.");
         } catch(err) {
@@ -177,13 +177,9 @@ export default function Home() {
     if (!canPlay || !areSoundsLoaded) return;
 
     const isEmergencyActive = fireAlert?.isActive || miningAlert?.isActive;
-
-    // Air Raid Alert Logic
-    if (airRaidAlert?.shouldAlert && !isEmergencyActive) {
-      // Play air raid only if no emergency alert is active
-      playSoundRepeatedly(airRaidPlayer.current, 'airRaid');
-    } else {
-      // Stop air raid if it shouldn't be alerting OR if an emergency alert is active
+    
+    // Stop air raid if it shouldn't be alerting OR if an emergency alert is active
+    if (!airRaidAlert?.shouldAlert || isEmergencyActive) {
       stopSound(airRaidPlayer.current, 'airRaid');
     }
 
@@ -201,7 +197,23 @@ export default function Home() {
       stopSound(miningPlayer.current, 'mining');
     }
 
-  }, [airRaidAlert, fireAlert, miningAlert, areSoundsLoaded]);
+  }, [airRaidAlert?.shouldAlert, fireAlert, miningAlert, areSoundsLoaded]);
+
+  // This separate effect handles the *start* of an air raid alert to play the sound only once.
+  useEffect(() => {
+    const prevAlertState = airRaidAlert?.shouldAlert;
+    
+    return () => {
+        // This cleanup function runs before the next render, capturing the previous state.
+        const currentAlertState = airRaidAlert?.shouldAlert;
+        const isEmergencyActive = fireAlert?.isActive || miningAlert?.isActive;
+
+        // Play air raid only if it just started and no emergency alert is active
+        if (currentAlertState === true && prevAlertState === false && !isEmergencyActive) {
+            playSoundRepeatedly(airRaidPlayer.current, 'airRaid');
+        }
+    };
+  }, [airRaidAlert?.shouldAlert, fireAlert?.isActive, miningAlert?.isActive, areSoundsLoaded]);
 
   // Scheduled Video Logic
   useInterval(() => {
