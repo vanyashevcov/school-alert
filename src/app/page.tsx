@@ -37,24 +37,25 @@ export default function Home() {
   const airRaidPlayer = useRef<Tone.Player | null>(null);
   const miningPlayer = useRef<Tone.Player | null>(null);
   const allClearPlayer = useRef<Tone.Player | null>(null);
+  const [areSoundsLoaded, setAreSoundsLoaded] = useState(false);
 
   const playCounter = useRef<{ [key: string]: number }>({}).current;
   const MAX_PLAYS = 3;
 
-  const playSoundRepeatedly = (player: Tone.Player | null, alertId: string) => {
-      if (!player || !player.loaded || player.state === 'started') return;
+   const playSoundRepeatedly = (player: Tone.Player | null, alertId: string) => {
+      if (!player || !player.loaded || player.state === 'started' || !areSoundsLoaded) return;
 
       playCounter[alertId] = 0;
+      const playerNode = player; // Capture player in this scope
 
       const playOnce = () => {
           if (playCounter[alertId] < MAX_PLAYS) {
-              player.start();
+              playerNode.start();
               playCounter[alertId]++;
           }
       };
 
-      player.onstop = () => {
-          // Add a small delay before the next play to avoid overlapping sounds
+      playerNode.onstop = () => {
           setTimeout(() => {
               if (playCounter[alertId] < MAX_PLAYS) {
                   playOnce();
@@ -80,22 +81,28 @@ export default function Home() {
     // Using absolute URLs to ensure files are found
     const baseUrl = window.location.origin;
 
-    airRaidPlayer.current = new Tone.Player({ url: `${baseUrl}/Air-raid-siren.mp3`}).toDestination();
-    fireAlarmPlayer.current = new Tone.Player({ url: `${baseUrl}/fire-alarm.mp3`}).toDestination();
-    miningPlayer.current = new Tone.Player({ url: `${baseUrl}/mining.mp3`}).toDestination();
-    allClearPlayer.current = new Tone.Player({ url: `${baseUrl}/after-air-alert.mp3`}).toDestination();
+    const loadSounds = async () => {
+        try {
+            const airRaidBuffer = await new Tone.Buffer(`${baseUrl}/Air-raid-siren.mp3`);
+            airRaidPlayer.current = new Tone.Player(airRaidBuffer).toDestination();
+            
+            const fireAlarmBuffer = await new Tone.Buffer(`${baseUrl}/fire-alarm.mp3`);
+            fireAlarmPlayer.current = new Tone.Player(fireAlarmBuffer).toDestination();
 
-    // Pre-load all players
-    Promise.all([
-        airRaidPlayer.current.load(`${baseUrl}/Air-raid-siren.mp3`),
-        fireAlarmPlayer.current.load(`${baseUrl}/fire-alarm.mp3`),
-        miningPlayer.current.load(`${baseUrl}/mining.mp3`),
-        allClearPlayer.current.load(`${baseUrl}/after-air-alert.mp3`),
-    ]).then(() => {
-        console.log("All audio files loaded.");
-    }).catch(err => {
-        console.error("Error loading audio files", err);
-    });
+            const miningBuffer = await new Tone.Buffer(`${baseUrl}/mining.mp3`);
+            miningPlayer.current = new Tone.Player(miningBuffer).toDestination();
+
+            const allClearBuffer = await new Tone.Buffer(`${baseUrl}/after-air-alert.mp3`);
+            allClearPlayer.current = new Tone.Player(allClearBuffer).toDestination();
+            
+            setAreSoundsLoaded(true);
+            console.log("All audio files pre-loaded into buffers.");
+        } catch(err) {
+             console.error("Error loading audio files into buffers", err);
+        }
+    }
+
+    loadSounds();
 
     return () => {
         airRaidPlayer.current?.dispose();
@@ -167,7 +174,7 @@ export default function Home() {
 
  useEffect(() => {
     const canPlay = Tone.context.state === 'running';
-    if (!canPlay) return;
+    if (!canPlay || !areSoundsLoaded) return;
 
     const isEmergencyActive = fireAlert?.isActive || miningAlert?.isActive;
 
@@ -194,7 +201,7 @@ export default function Home() {
       stopSound(miningPlayer.current, 'mining');
     }
 
-  }, [airRaidAlert, fireAlert, miningAlert]);
+  }, [airRaidAlert, fireAlert, miningAlert, areSoundsLoaded]);
 
   // Scheduled Video Logic
   useInterval(() => {
