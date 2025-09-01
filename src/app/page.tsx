@@ -133,13 +133,15 @@ export default function Home() {
         setVideoSettings(data || null);
     });
 
-    // Check localStorage for video play status
+    // Check localStorage for video play status on initial load
     const lastPlayedDate = localStorage.getItem('morningVideoLastPlayed');
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     if (lastPlayedDate === todayStr) {
         setHasPlayedToday(true);
     } else {
+        // If it's a new day, remove the old flag
         localStorage.removeItem('morningVideoLastPlayed');
+        setHasPlayedToday(false);
     }
 
     return () => {
@@ -237,42 +239,36 @@ export default function Home() {
 
   }, [airRaidAlert?.shouldAlert, fireAlert?.isActive, miningAlert?.isActive, areSoundsLoaded, initialAlertCheckDone.current]);
 
-  const checkScheduledVideo = () => {
-    const now = new Date();
-    const currentTime = format(now, 'HH:mm');
-
-    // Reset daily play status at midnight
-    if (currentTime === '00:00') {
-      if (hasPlayedToday) {
-        setHasPlayedToday(false);
-        localStorage.removeItem('morningVideoLastPlayed');
-      }
-    }
-
-    if (videoSettings?.isScheduled && videoSettings.scheduledTime && !videoSettings.isActive) {
-      if (currentTime === videoSettings.scheduledTime && !hasPlayedToday) {
-        const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
-        setDoc(videoSettingsDocRef, { isActive: true }, { merge: true });
-
-        const todayStr = format(new Date(), 'yyyy-MM-dd');
-        localStorage.setItem('morningVideoLastPlayed', todayStr);
-        setHasPlayedToday(true);
-      }
-    }
-  };
-
-  // Run once on mount
-  useEffect(() => {
-    // Check if we missed the time while the component was mounting
-    if (videoSettings) { // ensure settings are loaded
-        checkScheduledVideo();
-    }
-  }, [videoSettings]);
-
 
   // Scheduled Video Logic
   useInterval(() => {
-    checkScheduledVideo();
+    // Don't do anything if settings aren't loaded yet
+    if (!videoSettings) return;
+
+    const now = new Date();
+    const currentTime = format(now, 'HH:mm');
+    const todayStr = format(now, 'yyyy-MM-dd');
+    
+    // Reset daily play status at midnight
+    if (currentTime === '00:00' && hasPlayedToday) {
+        setHasPlayedToday(false);
+        localStorage.removeItem('morningVideoLastPlayed');
+        return; // exit to avoid check on the same tick
+    }
+    
+    // Check if it's time to play
+    if (
+      videoSettings.isScheduled &&
+      videoSettings.scheduledTime === currentTime &&
+      !hasPlayedToday &&
+      !videoSettings.isActive
+    ) {
+      const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
+      setDoc(videoSettingsDocRef, { isActive: true }, { merge: true });
+
+      localStorage.setItem('morningVideoLastPlayed', todayStr);
+      setHasPlayedToday(true);
+    }
   }, 1000); // Check every second for precision
 
 
