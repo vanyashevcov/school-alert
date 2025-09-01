@@ -248,15 +248,15 @@ export default function Home() {
         }
     }
 
-    if (videoSettings?.isScheduled && videoSettings.scheduledTime && !videoSettings.isActive) {
-        if (currentTime === videoSettings.scheduledTime && !hasPlayedToday) {
-            const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
-            setDoc(videoSettingsDocRef, { isActive: true }, { merge: true });
-            
-            const todayStr = format(now, 'yyyy-MM-dd');
-            localStorage.setItem('morningVideoLastPlayed', todayStr);
-            setHasPlayedToday(true);
-        }
+    if (videoSettings?.isScheduled && videoSettings.scheduledTime) {
+      if (currentTime === videoSettings.scheduledTime && !hasPlayedToday) {
+        const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
+        setDoc(videoSettingsDocRef, { isActive: true }, { merge: true });
+
+        const todayStr = format(now, 'yyyy-MM-dd');
+        localStorage.setItem('morningVideoLastPlayed', todayStr);
+        setHasPlayedToday(true);
+      }
     }
   }, 60000); // Check every minute
 
