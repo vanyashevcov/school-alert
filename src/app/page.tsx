@@ -133,6 +133,13 @@ export default function Home() {
         setVideoSettings(data || null);
     });
 
+    // Check localStorage for video play status
+    const lastPlayedDate = localStorage.getItem('morningVideoLastPlayed');
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    if (lastPlayedDate === todayStr) {
+        setHasPlayedToday(true);
+    }
+
     return () => {
       fireUnsubscribe();
       miningUnsubscribe();
@@ -230,17 +237,24 @@ export default function Home() {
 
   // Scheduled Video Logic
   useInterval(() => {
-    if (videoSettings?.isScheduled && videoSettings.scheduledTime && !videoSettings.isActive) {
-        const now = new Date();
-        const currentTime = format(now, 'HH:mm');
-        
-        if (currentTime === '00:00') {
-            setHasPlayedToday(false);
-        }
+    const now = new Date();
+    const currentTime = format(now, 'HH:mm');
 
+    // Reset daily play status at midnight
+    if (currentTime === '00:00') {
+        if (hasPlayedToday) {
+            setHasPlayedToday(false);
+            localStorage.removeItem('morningVideoLastPlayed');
+        }
+    }
+
+    if (videoSettings?.isScheduled && videoSettings.scheduledTime && !videoSettings.isActive) {
         if (currentTime === videoSettings.scheduledTime && !hasPlayedToday) {
             const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
             setDoc(videoSettingsDocRef, { isActive: true }, { merge: true });
+            
+            const todayStr = format(now, 'yyyy-MM-dd');
+            localStorage.setItem('morningVideoLastPlayed', todayStr);
             setHasPlayedToday(true);
         }
     }
