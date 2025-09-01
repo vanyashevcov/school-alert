@@ -138,6 +138,8 @@ export default function Home() {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     if (lastPlayedDate === todayStr) {
         setHasPlayedToday(true);
+    } else {
+        localStorage.removeItem('morningVideoLastPlayed');
     }
 
     return () => {
@@ -235,30 +237,43 @@ export default function Home() {
 
   }, [airRaidAlert?.shouldAlert, fireAlert?.isActive, miningAlert?.isActive, areSoundsLoaded, initialAlertCheckDone.current]);
 
-  // Scheduled Video Logic
-  useInterval(() => {
+  const checkScheduledVideo = () => {
     const now = new Date();
     const currentTime = format(now, 'HH:mm');
 
     // Reset daily play status at midnight
     if (currentTime === '00:00') {
-        if (hasPlayedToday) {
-            setHasPlayedToday(false);
-            localStorage.removeItem('morningVideoLastPlayed');
-        }
+      if (hasPlayedToday) {
+        setHasPlayedToday(false);
+        localStorage.removeItem('morningVideoLastPlayed');
+      }
     }
 
-    if (videoSettings?.isScheduled && videoSettings.scheduledTime) {
+    if (videoSettings?.isScheduled && videoSettings.scheduledTime && !videoSettings.isActive) {
       if (currentTime === videoSettings.scheduledTime && !hasPlayedToday) {
         const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
         setDoc(videoSettingsDocRef, { isActive: true }, { merge: true });
 
-        const todayStr = format(now, 'yyyy-MM-dd');
+        const todayStr = format(new Date(), 'yyyy-MM-dd');
         localStorage.setItem('morningVideoLastPlayed', todayStr);
         setHasPlayedToday(true);
       }
     }
-  }, 60000); // Check every minute
+  };
+
+  // Run once on mount
+  useEffect(() => {
+    // Check if we missed the time while the component was mounting
+    if (videoSettings) { // ensure settings are loaded
+        checkScheduledVideo();
+    }
+  }, [videoSettings]);
+
+
+  // Scheduled Video Logic
+  useInterval(() => {
+    checkScheduledVideo();
+  }, 1000); // Check every second for precision
 
 
   const activeEmergencyAlert = fireAlert?.isActive ? fireAlert : (miningAlert?.isActive ? miningAlert : null);
@@ -293,3 +308,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
