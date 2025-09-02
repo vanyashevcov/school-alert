@@ -30,6 +30,7 @@ export default function Home() {
   const [miningAlert, setMiningAlert] = useState<EmergencyAlert | null>(null);
   const [bellNotification, setBellNotification] = useState<string | null>(null);
   const [videoSettings, setVideoSettings] = useState<VideoSettings | null>(null);
+  const [isScheduledVideoPlaying, setIsScheduledVideoPlaying] = useState(false);
   const [hasPlayedToday, setHasPlayedToday] = useState(false);
   const prevAirRaidStatus = useRef<boolean | null>(null);
   const initialAlertCheckDone = useRef(false);
@@ -260,12 +261,9 @@ export default function Home() {
     if (
       videoSettings.isScheduled &&
       videoSettings.scheduledTime === currentTime &&
-      !hasPlayedToday &&
-      !videoSettings.isActive
+      !hasPlayedToday
     ) {
-      const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
-      setDoc(videoSettingsDocRef, { isActive: true }, { merge: true });
-
+      setIsScheduledVideoPlaying(true);
       localStorage.setItem('morningVideoLastPlayed', todayStr);
       setHasPlayedToday(true);
     }
@@ -279,6 +277,15 @@ export default function Home() {
     setBellNotification(message);
     setTimeout(() => setBellNotification(null), 15000); // Hide after 15 seconds
   };
+  
+  const handleVideoEnd = () => {
+    setIsScheduledVideoPlaying(false);
+    // Also turn off the manually activated one if it was on
+    if (videoSettings?.isActive) {
+        const videoSettingsDocRef = doc(db, 'settings', 'morningVideo');
+        setDoc(videoSettingsDocRef, { isActive: false }, { merge: true });
+    }
+  };
 
 
   return (
@@ -286,7 +293,7 @@ export default function Home() {
       <AudioEnabler />
       <BellSystem onBellRing={handleBellNotification} />
       <BellNotification message={bellNotification} />
-      {videoSettings?.isActive && <MorningVideoPlayer />}
+      {(videoSettings?.isActive || isScheduledVideoPlaying) && <MorningVideoPlayer onVideoEnd={handleVideoEnd} />}
 
 
       <header className="absolute top-4 left-4 right-4 z-10 flex items-start justify-between">
@@ -304,5 +311,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
