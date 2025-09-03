@@ -62,52 +62,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SidebarContent>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                      <Link href="/admin/dashboard" passHref legacyBehavior>
-                          <SidebarMenuButton asChild tooltip="Керування контентом" isActive={pathname === '/admin/dashboard'}>
-                            <a>
+                      <Link href="/admin/dashboard">
+                          <SidebarMenuButton tooltip="Керування контентом" isActive={pathname === '/admin/dashboard'}>
                               <FileVideo />
                               <span className="truncate">Контент</span>
-                            </a>
                           </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                       <Link href="/admin/schedule" passHref legacyBehavior>
-                          <SidebarMenuButton asChild tooltip="Розклад дзвінків" isActive={pathname === '/admin/schedule'}>
-                            <a>
+                       <Link href="/admin/schedule">
+                          <SidebarMenuButton tooltip="Розклад дзвінків" isActive={pathname === '/admin/schedule'}>
                               <BellRing />
                               <span className="truncate">Дзвінки</span>
-                            </a>
                           </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <Link href="/admin/news" passHref legacyBehavior>
-                          <SidebarMenuButton asChild tooltip="Рядок новин" isActive={pathname === '/admin/news'}>
-                           <a>
+                      <Link href="/admin/news">
+                          <SidebarMenuButton tooltip="Рядок новин" isActive={pathname === '/admin/news'}>
                               <Newspaper />
-                              <span className="truncate">Новини</span>
-                           </a>
+                              <span className="truncate">Новини</span>>
                           </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
                      <SidebarMenuItem>
-                       <Link href="/admin/emergency" passHref legacyBehavior>
-                           <SidebarMenuButton asChild tooltip="Аварійні тривоги" isActive={pathname === '/admin/emergency'}>
-                           <a>
+                       <Link href="/admin/emergency">
+                           <SidebarMenuButton tooltip="Аварійні тривоги" isActive={pathname === '/admin/emergency'}>
                               <TriangleAlert />
                               <span className="truncate">Тривоги</span>
-                           </a>
                            </SidebarMenuButton>
                        </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <Link href="/admin/video" passHref legacyBehavior>
-                          <SidebarMenuButton asChild tooltip="Ранкове відео" isActive={pathname === '/admin/video'}>
-                           <a>
+                      <Link href="/admin/video">
+                          <SidebarMenuButton tooltip="Ранкове відео" isActive={pathname === '/admin/video'}>
                               <Clapperboard />
                               <span className="truncate">Ранкове відео</span>
-                           </a>
                           </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
