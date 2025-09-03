@@ -83,23 +83,23 @@ export default function VideoManager() {
   }
   
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
         <Card>
             <CardHeader>
                 <div className="flex items-center gap-4">
                     <Clapperboard className="h-8 w-8 text-primary" />
                     <div>
                         <CardTitle>Ручне керування</CardTitle>
-                        <CardDescription>Примусово увімкніть або вимкніть відтворення відео на головному екрані.</CardDescription>
+                        <CardDescription>Примусово увімкніть або вимкніть відтворення відео.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <h3 className="text-lg font-medium">Показати відео</h3>
+                    <div className="space-y-0.5 pr-4">
+                        <h3 className="text-base md:text-lg font-medium">Показати відео</h3>
                         <p className="text-sm text-muted-foreground">
-                        {settings?.isActive ? "Відео зараз відображається на головному екрані." : "Відео вимкнено."}
+                        {settings?.isActive ? "Відео зараз активне." : "Відео вимкнено."}
                         </p>
                     </div>
                     <Switch
@@ -109,7 +109,7 @@ export default function VideoManager() {
                     />
                 </div>
                  <div className="text-sm text-muted-foreground pt-4">
-                    <p><strong>Примітка:</strong> Відео програється один раз і автоматично вимкнеться після завершення. Ви можете увімкнути його знову в будь-який час.</p>
+                    <p><strong>Примітка:</strong> Відео програється один раз і автоматично вимкнеться після завершення.</p>
                 </div>
             </CardContent>
         </Card>
@@ -120,17 +120,17 @@ export default function VideoManager() {
                     <CalendarClock className="h-8 w-8 text-primary" />
                     <div>
                         <CardTitle>Автоматичне відтворення</CardTitle>
-                        <CardDescription>Налаштуйте час для автоматичного щоденного показу відео.</CardDescription>
+                        <CardDescription>Налаштуйте час для щоденного показу відео.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleScheduleSave} className="space-y-6">
                     <div className="flex items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                            <h3 className="text-lg font-medium">Увімкнути розклад</h3>
+                        <div className="space-y-0.5 pr-4">
+                            <h3 className="text-base md:text-lg font-medium">Увімкнути розклад</h3>
                             <p className="text-sm text-muted-foreground">
-                            {settings?.isScheduled ? "Відео буде вмикатися автоматично." : "Автоматичне відтворення вимкнено."}
+                            {settings?.isScheduled ? "Автоматичне відтворення увімкнено." : "Автоматичне відтворення вимкнено."}
                             </p>
                         </div>
                         <Switch
@@ -147,7 +147,7 @@ export default function VideoManager() {
                                 type="time"
                                 value={settings?.scheduledTime || '09:00'}
                                 onChange={(e) => handleScheduleChange('scheduledTime', e.target.value)}
-                                className="w-48"
+                                className="w-auto"
                             />
                         </div>
                     )}

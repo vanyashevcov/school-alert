@@ -13,7 +13,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarFooter
+  SidebarFooter,
+  SidebarTrigger
 } from '@/components/ui/sidebar';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -52,7 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Sidebar>
             <SidebarHeader className="p-4">
                 <Link href="/admin/dashboard" className="flex items-center gap-2">
-                    <div className="p-2 bg-primary rounded-lg text-primary-foreground">
+                    <div className="p-2 bg-sidebar-primary rounded-lg text-sidebar-primary-foreground">
                         <School />
                     </div>
                     <span className="font-bold text-lg group-data-[collapsible=icon]:hidden">School Hub</span>
@@ -61,44 +62,54 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SidebarContent>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Керування контентом" isActive={pathname === '/admin/dashboard'}>
-                          <Link href="/admin/dashboard">
+                      <Link href="/admin/dashboard" passHref>
+                          <SidebarMenuButton asChild tooltip="Керування контентом" isActive={pathname === '/admin/dashboard'}>
+                            <a>
                               <FileVideo />
                               <span className="truncate">Контент</span>
-                          </Link>
-                        </SidebarMenuButton>
+                            </a>
+                          </SidebarMenuButton>
+                      </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Розклад дзвінків" isActive={pathname === '/admin/schedule'}>
-                          <Link href="/admin/schedule">
+                       <Link href="/admin/schedule" passHref>
+                          <SidebarMenuButton asChild tooltip="Розклад дзвінків" isActive={pathname === '/admin/schedule'}>
+                            <a>
                               <BellRing />
                               <span className="truncate">Дзвінки</span>
-                          </Link>
-                        </SidebarMenuButton>
+                            </a>
+                          </SidebarMenuButton>
+                      </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Рядок новин" isActive={pathname === '/admin/news'}>
-                          <Link href="/admin/news">
+                      <Link href="/admin/news" passHref>
+                          <SidebarMenuButton asChild tooltip="Рядок новин" isActive={pathname === '/admin/news'}>
+                           <a>
                               <Newspaper />
                               <span className="truncate">Новини</span>
-                          </Link>
-                        </SidebarMenuButton>
+                           </a>
+                          </SidebarMenuButton>
+                      </Link>
                     </SidebarMenuItem>
                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Аварійні тривоги" isActive={pathname === '/admin/emergency'}>
-                           <Link href="/admin/emergency">
+                       <Link href="/admin/emergency" passHref>
+                           <SidebarMenuButton asChild tooltip="Аварійні тривоги" isActive={pathname === '/admin/emergency'}>
+                           <a>
                               <TriangleAlert />
                               <span className="truncate">Тривоги</span>
-                           </Link>
-                        </SidebarMenuButton>
+                           </a>
+                           </SidebarMenuButton>
+                       </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Ранкове відео" isActive={pathname === '/admin/video'}>
-                          <Link href="/admin/video">
+                      <Link href="/admin/video" passHref>
+                          <SidebarMenuButton asChild tooltip="Ранкове відео" isActive={pathname === '/admin/video'}>
+                           <a>
                               <Clapperboard />
                               <span className="truncate">Ранкове відео</span>
-                          </Link>
-                        </SidebarMenuButton>
+                           </a>
+                          </SidebarMenuButton>
+                      </Link>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarContent>
@@ -114,7 +125,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-            <main className="flex-1 bg-background h-screen overflow-y-auto">{children}</main>
+            <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+                <SidebarTrigger className="md:hidden" />
+                <h1 className="text-xl font-semibold">Адмін-панель</h1>
+            </header>
+            <main className="flex-1 flex flex-col">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

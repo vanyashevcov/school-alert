@@ -94,9 +94,17 @@ function AlertCard({ alertId, config }: { alertId: EmergencyAlertId, config: typ
 
   if (isLoading) {
       return (
-          <div className="flex items-center justify-center h-full">
-              <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
+          <Card>
+            <CardHeader>
+                <div className="flex items-center gap-4">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <div>
+                        <CardTitle>{config.title}</CardTitle>
+                        <CardDescription>Завантаження...</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+          </Card>
       )
   }
   
@@ -115,10 +123,10 @@ function AlertCard({ alertId, config }: { alertId: EmergencyAlertId, config: typ
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                    <h3 className="text-lg font-medium">Активувати тривогу</h3>
+                <div className="space-y-0.5 pr-4">
+                    <h3 className="text-base md:text-lg font-medium">Активувати тривогу</h3>
                     <p className="text-sm text-muted-foreground">
-                       {alertState?.isActive ? "Тривога активна. На головному екрані відображається сповіщення." : "Тривога неактивна."}
+                       {alertState?.isActive ? "Тривога активна." : "Тривога неактивна."}
                     </p>
                 </div>
                 <Switch
@@ -142,7 +150,7 @@ function AlertCard({ alertId, config }: { alertId: EmergencyAlertId, config: typ
             <div className="flex justify-end">
                 <Button onClick={handleSaveMessage} disabled={isSaving}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Зберегти повідомлення
+                    Зберегти
                 </Button>
             </div>
         </CardContent>
@@ -152,7 +160,7 @@ function AlertCard({ alertId, config }: { alertId: EmergencyAlertId, config: typ
 
 export default function EmergencyAlertManager() {
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
         <AlertCard alertId="fireAlarm" config={alertConfig.fireAlarm} />
         <AlertCard alertId="miningAlarm" config={alertConfig.miningAlarm} />
     </div>

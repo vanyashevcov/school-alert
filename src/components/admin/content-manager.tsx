@@ -80,10 +80,9 @@ export default function ContentManager() {
 
   return (
     <Card className="h-full border-0 rounded-none shadow-none flex flex-col">
-      <CardHeader>
-        <div className="flex justify-between items-start">
+      <CardHeader className="p-0 mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div>
-                <CardTitle>Слайди для показу</CardTitle>
                 <CardDescription>Додавайте, редагуйте та видаляйте контент для головного екрану.</CardDescription>
             </div>
              <Dialog open={isFormOpen} onOpenChange={(isOpen) => {
@@ -91,7 +90,7 @@ export default function ContentManager() {
                  setIsFormOpen(isOpen);
              }}>
                 <DialogTrigger asChild>
-                    <Button onClick={() => setEditingSlide(null)}>
+                    <Button onClick={() => setEditingSlide(null)} className="mt-4 sm:mt-0">
                         <PlusCircle className="mr-2 h-4 w-4" /> Додати слайд
                     </Button>
                 </DialogTrigger>
@@ -111,13 +110,14 @@ export default function ContentManager() {
             </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="flex-1">
+      <CardContent className="flex-1 p-0 overflow-auto">
+       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Тип</TableHead>
+              <TableHead className="hidden md:table-cell">Тип</TableHead>
               <TableHead>Назва / Контент</TableHead>
-              <TableHead className="text-right">Тривалість</TableHead>
+              <TableHead className="text-right hidden sm:table-cell">Тривалість</TableHead>
               <TableHead className="text-right">Дії</TableHead>
             </TableRow>
           </TableHeader>
@@ -125,12 +125,12 @@ export default function ContentManager() {
             {slides.length > 0 ? (
                 slides.map(slide => (
                 <TableRow key={slide.id}>
-                    <TableCell>{getIcon(slide.type)}</TableCell>
+                    <TableCell className="hidden md:table-cell">{getIcon(slide.type)}</TableCell>
                     <TableCell className="font-medium">
                         <div className="font-bold">{slide.title || 'Без назви'}</div>
-                        <div className="text-sm text-muted-foreground truncate max-w-xs">{slide.content}</div>
+                        <div className="text-sm text-muted-foreground truncate max-w-[200px] sm:max-w-xs">{slide.content}</div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right hidden sm:table-cell">
                         {slide.type === 'video' ? 'Авто' : `${slide.duration} с.`}
                     </TableCell>
                     <TableCell className="text-right">
@@ -148,6 +148,7 @@ export default function ContentManager() {
             )}
           </TableBody>
         </Table>
+        </div>
       </CardContent>
     </Card>
   );
