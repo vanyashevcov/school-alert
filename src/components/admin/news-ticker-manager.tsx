@@ -131,7 +131,7 @@ export default function NewsTickerManager() {
   }
 
   return (
-    <Card className="h-full border-0 rounded-none shadow-none flex flex-col">
+    <Card className="border-0 shadow-none">
       <CardHeader className="px-0">
         <div className="flex justify-between items-start">
             <div>
@@ -162,7 +162,7 @@ export default function NewsTickerManager() {
             </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 px-0 overflow-y-auto">
+      <CardContent className="px-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -175,7 +175,7 @@ export default function NewsTickerManager() {
                 news.map(item => (
                 <TableRow key={item.id}>
                     <TableCell className="font-medium">
-                        <p className="truncate max-w-lg">{item.text}</p>
+                        <p className="truncate max-w-xs md:max-w-lg">{item.text}</p>
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap">
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>Редагувати</Button>

@@ -79,7 +79,7 @@ export default function ContentManager() {
   }
 
   return (
-    <Card className="h-full border-0 rounded-none shadow-none flex flex-col">
+    <Card className="border-0 shadow-none">
       <CardHeader className="p-0 mb-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div>
@@ -110,7 +110,7 @@ export default function ContentManager() {
             </Dialog>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 p-0 overflow-auto">
+      <CardContent className="p-0">
        <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>

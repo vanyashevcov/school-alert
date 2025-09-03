@@ -119,11 +119,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <SidebarTrigger className="md:hidden" />
                 <h1 className="text-xl font-semibold">Адмін-панель</h1>
             </header>
-            <div className="flex-1 overflow-y-auto">
-                <main className="p-4 md:p-6">
-                    {children}
-                </main>
-            </div>
+            <main className="flex-1 overflow-y-auto p-4 md:p-6">
+                {children}
+            </main>
         </SidebarInset>
       </div>
     </SidebarProvider>
