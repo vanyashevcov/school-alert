@@ -62,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SidebarContent>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                      <Link href="/admin/dashboard" passHref>
+                      <Link href="/admin/dashboard" passHref legacyBehavior>
                           <SidebarMenuButton asChild tooltip="Керування контентом" isActive={pathname === '/admin/dashboard'}>
                             <a>
                               <FileVideo />
@@ -72,7 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                       <Link href="/admin/schedule" passHref>
+                       <Link href="/admin/schedule" passHref legacyBehavior>
                           <SidebarMenuButton asChild tooltip="Розклад дзвінків" isActive={pathname === '/admin/schedule'}>
                             <a>
                               <BellRing />
@@ -82,7 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <Link href="/admin/news" passHref>
+                      <Link href="/admin/news" passHref legacyBehavior>
                           <SidebarMenuButton asChild tooltip="Рядок новин" isActive={pathname === '/admin/news'}>
                            <a>
                               <Newspaper />
@@ -92,7 +92,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       </Link>
                     </SidebarMenuItem>
                      <SidebarMenuItem>
-                       <Link href="/admin/emergency" passHref>
+                       <Link href="/admin/emergency" passHref legacyBehavior>
                            <SidebarMenuButton asChild tooltip="Аварійні тривоги" isActive={pathname === '/admin/emergency'}>
                            <a>
                               <TriangleAlert />
@@ -102,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                        </Link>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <Link href="/admin/video" passHref>
+                      <Link href="/admin/video" passHref legacyBehavior>
                           <SidebarMenuButton asChild tooltip="Ранкове відео" isActive={pathname === '/admin/video'}>
                            <a>
                               <Clapperboard />
